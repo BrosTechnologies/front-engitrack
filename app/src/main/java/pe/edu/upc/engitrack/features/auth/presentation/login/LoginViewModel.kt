@@ -27,7 +27,6 @@ class LoginViewModel(private val repository: AuthRepository) : ViewModel() {
     }
 
     fun login() {
-
         viewModelScope.launch {
             _user.value = repository.login(username.value, password.value)
         }

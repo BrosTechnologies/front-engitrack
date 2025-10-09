@@ -1,4 +1,4 @@
-package pe.edu.upc.engitrack.features.auth.presentation.login
+package pe.edu.upc.engitrack.features.auth.presentation.register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
@@ -37,20 +38,23 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pe.edu.upc.engitrack.core.ui.theme.EasyShopTheme
-import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule.getLoginViewModel
+import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule
 
 @Composable
-fun Login(
-    viewModel: LoginViewModel,
-    onLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit  // Nuevo parámetro
-
+fun Register(
+    viewModel: RegisterViewModel,
+    onRegister: () -> Unit,
+    onLogin: () -> Unit
 ) {
-    val username = viewModel.username.collectAsState()
-
+    val fullName = viewModel.fullName.collectAsState()
+    val email = viewModel.email.collectAsState()
     val password = viewModel.password.collectAsState()
+    val repeatPassword = viewModel.repeatPassword.collectAsState()
 
     val isVisible = remember {
+        mutableStateOf(false)
+    }
+    val isRepeatVisible = remember {
         mutableStateOf(false)
     }
 
@@ -77,15 +81,31 @@ fun Login(
             )
 
             OutlinedTextField(
-                value = username.value,
+                value = fullName.value,
                 onValueChange = {
-                    viewModel.updateUsername(it)
+                    viewModel.updateFullName(it)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
                 leadingIcon = {
                     Icon(Icons.Default.Person, contentDescription = null)
+                },
+                placeholder = {
+                    Text(text = "Full name")
+                }
+            )
+
+            OutlinedTextField(
+                value = email.value,
+                onValueChange = {
+                    viewModel.updateEmail(it)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                leadingIcon = {
+                    Icon(Icons.Default.Email, contentDescription = null)
                 },
                 placeholder = {
                     Text(text = "Email")
@@ -128,27 +148,55 @@ fun Login(
                 }
             )
 
-            Text(
-                text = "forgot password?",
-                color = Color.Gray,
+            OutlinedTextField(
+                value = repeatPassword.value,
+                onValueChange = {
+                    viewModel.updateRepeatPassword(it)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                textAlign = TextAlign.End
+                leadingIcon = {
+                    Icon(Icons.Default.Lock, contentDescription = null)
+                },
+                placeholder = {
+                    Text("Repeat password")
+                },
+                visualTransformation = if (isRepeatVisible.value) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            isRepeatVisible.value = !isRepeatVisible.value
+                        }
+                    ) {
+                        Icon(
+                            if (isRepeatVisible.value) {
+                                Icons.Default.Visibility
+                            } else {
+                                Icons.Default.VisibilityOff
+                            },
+                            contentDescription = null
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    //  viewModel.login()
-                    onLogin()
+                    viewModel.register()
+                    onRegister()
                 },
                 modifier = Modifier
                     .width(280.dp)
                     .height(50.dp)
             ) {
-                Text(text = "Login")
+                Text(text = "Register")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -182,15 +230,15 @@ fun Login(
 
         ClickableText(
             text = buildAnnotatedString {
-                append("Dont have an account? ")
+                append("Log in if you already have an account")
                 withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
-                    pushStringAnnotation(tag = "SignUp", annotation = "SignUp")
-                    append("Sign up")
+                    pushStringAnnotation(tag = "Login", annotation = "Login")
+                    append("")
                     pop()
                 }
             },
-            onClick = { offset ->
-                onNavigateToRegister()  // Llamar al parámetro de navegación
+            onClick = {
+                onLogin()
             },
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -199,9 +247,9 @@ fun Login(
 
 @Preview(showBackground = true)
 @Composable
-fun LoginPreview() {
-    val viewModel = getLoginViewModel()
+fun RegisterPreview() {
+    val viewModel = PresentationModule.getRegisterViewModel()
     EasyShopTheme {
-        Login(viewModel, {}, {})  // Pasar lambdas vacías para los callbacks
+        Register (viewModel, {}, {})
     }
 }

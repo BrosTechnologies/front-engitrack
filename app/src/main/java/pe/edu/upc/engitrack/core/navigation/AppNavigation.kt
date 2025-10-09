@@ -10,8 +10,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import pe.edu.upc.engitrack.core.root.Main
 import pe.edu.upc.engitrack.core.ui.theme.EasyShopTheme
+
 import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule.getLoginViewModel
 import pe.edu.upc.engitrack.features.auth.presentation.login.Login
+
+import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule.getRegisterViewModel
+import pe.edu.upc.engitrack.features.auth.presentation.register.Register
+
 import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDetail
 import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDetailViewModel
 
@@ -19,15 +24,32 @@ import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDeta
 fun AppNavigation() {
     val navController = rememberNavController()
     val loginViewModel = getLoginViewModel()
+    val registerViewModel = getRegisterViewModel()
 
 
     NavHost(navController, startDestination = Route.Login.route) {
         composable(Route.Login.route) {
-            Login(loginViewModel) {
-                navController.navigate(Route.Main.route)
-            }
+            Login(
+                loginViewModel,
+                onLogin = {
+                    navController.navigate(Route.Main.route)
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Route.Register.route)
+                }
+            )
+        }
 
-
+        composable(Route.Register.route) {
+            Register(
+                viewModel = registerViewModel,
+                onLogin = {
+                    navController.navigate(Route.Login.route)
+                },
+                onRegister = {
+                    navController.navigate(Route.Main.route)
+                }
+            )
         }
 
 
