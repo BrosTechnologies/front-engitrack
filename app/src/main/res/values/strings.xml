@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">EasyShop</string>
+    <string name="placeholder_search">Search</string>
+    <string name="label_categories">Categories</string>
+    <string name="button_see_all">See all</string>
+    <string name="label_products">Products</string>
+</resources>

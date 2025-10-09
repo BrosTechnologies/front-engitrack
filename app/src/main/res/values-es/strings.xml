@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EasyShop</string>
+    <string name="placeholder_search">Buscar</string>
+    <string name="label_categories">Categorías</string>
+    <string name="button_see_all">Mostrar todo</string>
+    <string name="label_products">Productos</string>
+</resources>
