@@ -161,7 +161,13 @@ fun ProjectsScreen(
                 items(uiState.filteredProjects) { project ->
                     ProjectListItem(
                         project = project,
-                        onClick = { onProjectClick(project.id) }
+                        onClick = { 
+                            try {
+                                onProjectClick(project.id)
+                            } catch (e: Exception) {
+                                android.util.Log.e("ProjectsScreen", "Error clicking project", e)
+                            }
+                        }
                     )
                 }
             }

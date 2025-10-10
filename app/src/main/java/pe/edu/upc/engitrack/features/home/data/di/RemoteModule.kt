@@ -11,6 +11,7 @@ import pe.edu.upc.engitrack.features.auth.data.remote.AuthService
 import pe.edu.upc.engitrack.features.auth.data.repositories.AuthRepositoryImpl
 import pe.edu.upc.engitrack.features.auth.domain.repositories.AuthRepository
 import pe.edu.upc.engitrack.features.home.data.remote.services.ProductService
+import pe.edu.upc.engitrack.features.profile.data.remote.ProfileApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Named
@@ -69,5 +70,11 @@ object RemoteModule {
     @Singleton
     fun provideAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository {
         return authRepositoryImpl
+    }
+    
+    @Provides
+    @Singleton
+    fun provideProfileApiService(retrofit: Retrofit): ProfileApiService {
+        return retrofit.create(ProfileApiService::class.java)
     }
 }

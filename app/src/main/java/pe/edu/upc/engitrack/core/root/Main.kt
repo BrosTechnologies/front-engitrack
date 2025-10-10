@@ -22,13 +22,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import pe.edu.upc.engitrack.core.auth.AuthManager
 import pe.edu.upc.engitrack.features.dashboard.presentation.DashboardScreen
 import pe.edu.upc.engitrack.features.projects.presentation.list.ProjectsScreen
+import pe.edu.upc.engitrack.features.profile.presentation.ProfileScreen
 
 @Composable
 fun Main(
     authManager: AuthManager,
     onTapProductCard: (Int) -> Unit,
     onNavigateToCreateProject: () -> Unit,
-    onNavigateToProjectDetail: (String) -> Unit
+    onNavigateToProjectDetail: (String) -> Unit,
+    onNavigateToAuth: () -> Unit = {}
 ) {
 
     val navigationItems = listOf(
@@ -81,7 +83,9 @@ fun Main(
                     onCreateProject = onNavigateToCreateProject
                 )
                 2 -> CalendarScreen() // TODO: Implementar
-                3 -> ProfileScreen(authManager) // TODO: Implementar
+                3 -> ProfileScreen(
+                    onNavigateToAuth = onNavigateToAuth
+                )
             }
         }
     }
@@ -91,12 +95,6 @@ fun Main(
 private fun CalendarScreen() {
     // TODO: Implementar pantalla de calendario
     Text("Calendario - En construcción")
-}
-
-@Composable
-private fun ProfileScreen(authManager: AuthManager) {
-    // TODO: Implementar pantalla de perfil
-    Text("Perfil - En construcción")
 }
 
 data class NavigationItem(val icon: ImageVector, val label: String)
