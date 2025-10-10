@@ -32,10 +32,10 @@ import pe.edu.upc.engitrack.core.ui.theme.EasyShopTheme
 fun WelcomeScreen(
     onGetStartedClick: () -> Unit
 ) {
-    // Usamos el color de fondo definido en tu tema para asegurar que sea blanco
+
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background // <-- CAMBIO: Aseguramos fondo blanco
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -44,7 +44,7 @@ fun WelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Spacer para dar un margen superior al contenido
-            Spacer(modifier = Modifier.height(100.dp)) // <-- CAMBIO: Margen superior
+            Spacer(modifier = Modifier.height(100.dp))
 
             // Bloque del contenido principal (Imagen, Título, Subtítulo)
             Column(
@@ -72,19 +72,18 @@ fun WelcomeScreen(
             }
 
             // Este Spacer ocupa todo el espacio disponible, empujando el botón hacia abajo
-            Spacer(modifier = Modifier.weight(1f)) // <-- CAMBIO: Empuja el botón al fondo
+            Spacer(modifier = Modifier.weight(1f))
 
             // Botón de "Get Started" en la parte inferior
             Button(
                 onClick = onGetStartedClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 40.dp) // <-- CAMBIO: Añadimos padding inferior
+                    .padding(bottom = 40.dp) //
                     .height(52.dp),
-                shape = RoundedCornerShape(12.dp), // <-- CAMBIO: Esquinas redondeadas
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B82F6) // <-- CAMBIO: Color azul claro del Figma.
-                    // ¡Reemplázalo si tienes el código exacto!
+                    containerColor = Color(0xFF3B82F6)
                 )
             ) {
                 Text(

@@ -8,4 +8,13 @@
     <string name="welcome_title">Engitrack</string>
     <string name="welcome_subtitle">Organiza, monitorea y crece</string>
     <string name="get_started">Comenzar</string>
+    <string name="onboarding_title_1">Seguimiento de Proyectos</string>
+    <string name="onboarding_description_1">Mantente al tanto de los proyectos de ingeniería con seguimiento en tiempo real de tareas, progreso y colaboración.</string>
+    <string name="onboarding_title_2">Colaboración en Equipo</string>
+    <string name="onboarding_description_2">Trabaja sin problemas con los miembros de tu equipo. Comparte actualizaciones, asigna tareas y sigue el progreso en tiempo real.</string>
+    <string name="onboarding_title_3">Notificaciones en Tiempo Real</string>
+    <string name="onboarding_description_3">Mantente actualizado con alertas instantáneas sobre el progreso del proyecto, asignaciones de tareas y comunicaciones del equipo.</string>
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_get_started">Comenzar</string>
 </resources>
