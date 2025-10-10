@@ -4,4 +4,7 @@
     <string name="label_categories">Categories</string>
     <string name="button_see_all">See all</string>
     <string name="label_products">Products</string>
+    <string name="welcome_title">Engitrack</string>
+    <string name="welcome_subtitle">Organize, monitor, and grow</string>
+    <string name="get_started">Get Started</string>
 </resources>
