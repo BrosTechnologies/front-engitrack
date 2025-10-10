@@ -23,6 +23,7 @@ import pe.edu.upc.engitrack.core.auth.AuthManager
 import pe.edu.upc.engitrack.features.dashboard.presentation.DashboardScreen
 import pe.edu.upc.engitrack.features.projects.presentation.list.ProjectsScreen
 import pe.edu.upc.engitrack.features.profile.presentation.ProfileScreen
+import pe.edu.upc.engitrack.features.calendar.presentation.CalendarScreen
 
 @Composable
 fun Main(
@@ -30,7 +31,8 @@ fun Main(
     onTapProductCard: (Int) -> Unit,
     onNavigateToCreateProject: () -> Unit,
     onNavigateToProjectDetail: (String) -> Unit,
-    onNavigateToAuth: () -> Unit = {}
+    onNavigateToAuth: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {}
 ) {
 
     val navigationItems = listOf(
@@ -82,9 +84,10 @@ fun Main(
                     onProjectClick = onNavigateToProjectDetail,
                     onCreateProject = onNavigateToCreateProject
                 )
-                2 -> CalendarScreen() // TODO: Implementar
+                2 -> CalendarScreen()
                 3 -> ProfileScreen(
-                    onNavigateToAuth = onNavigateToAuth
+                    onNavigateToAuth = onNavigateToAuth,
+                    onNavigateToEditProfile = onNavigateToEditProfile
                 )
             }
         }
@@ -93,8 +96,7 @@ fun Main(
 
 @Composable
 private fun CalendarScreen() {
-    // TODO: Implementar pantalla de calendario
-    Text("Calendario - En construcción")
+    pe.edu.upc.engitrack.features.calendar.presentation.CalendarScreen()
 }
 
 data class NavigationItem(val icon: ImageVector, val label: String)
