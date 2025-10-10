@@ -37,7 +37,7 @@ class RegisterViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
     
-    val roleOptions = listOf("SUPERVISOR", "CONTRACTOR", "WORKER")
+    val roleOptions = listOf("SUPERVISOR", "CONTRACTOR", "USER")
 
     fun updateFullName(value: String) {
         _fullName.value = value
