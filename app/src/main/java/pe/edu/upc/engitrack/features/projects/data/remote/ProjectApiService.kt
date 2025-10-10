@@ -6,6 +6,11 @@ import retrofit2.http.*
 
 interface ProjectApiService {
     
+    @POST("/api/projects")
+    suspend fun createProject(
+        @Body request: CreateProjectRequest
+    ): Response<Project>
+    
     @GET("/api/projects")
     suspend fun getProjects(
         @Query("status") status: String? = null,
@@ -17,11 +22,6 @@ interface ProjectApiService {
     @GET("/api/projects/{id}")
     suspend fun getProjectById(
         @Path("id") id: String
-    ): Response<Project>
-    
-    @POST("/api/projects")
-    suspend fun createProject(
-        @Body project: CreateProjectRequest
     ): Response<Project>
     
     @PATCH("/api/projects/{id}")

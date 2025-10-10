@@ -24,6 +24,7 @@ import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDeta
 import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDetailViewModel
 import pe.edu.upc.engitrack.features.projects.presentation.create.CreateProjectScreen
 import pe.edu.upc.engitrack.features.projects.presentation.detail.ProjectDetailScreen
+import pe.edu.upc.engitrack.features.profile.presentation.EditProfileScreen
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -101,12 +102,32 @@ fun AppNavigation() {
                             inclusive = true
                         }
                     }
+                },
+                onNavigateToEditProfile = {
+                    navController.navigate(Route.EditProfile.route)
                 }
             )
         }
 
         composable(Route.CreateProject.route) {
+            val context = LocalContext.current
+            val authManager = remember {
+                EntryPointAccessors.fromApplication(
+                    context.applicationContext,
+                    AuthManagerEntryPoint::class.java
+                ).authManager()
+            }
+            
             CreateProjectScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                authManager = authManager
+            )
+        }
+
+        composable(Route.EditProfile.route) {
+            EditProfileScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

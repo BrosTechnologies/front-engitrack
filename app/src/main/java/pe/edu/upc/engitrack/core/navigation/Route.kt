@@ -5,6 +5,7 @@ sealed class Route(val route: String){
     object Register: Route("register")
     object Main: Route("main")
     object CreateProject: Route("create_project")
+    object EditProfile: Route("edit_profile")
     object ProjectDetail: Route("project_detail") {
         const val routeWithArgument = "project_detail/{id}"
         const val argument = "id"

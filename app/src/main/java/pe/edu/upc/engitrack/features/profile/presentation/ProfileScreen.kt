@@ -25,6 +25,7 @@ import pe.edu.upc.engitrack.features.profile.domain.models.UserProfile
 @Composable
 fun ProfileScreen(
     onNavigateToAuth: () -> Unit,
+    onNavigateToEditProfile: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -53,7 +54,7 @@ fun ProfileScreen(
         else -> {
             ProfileContent(
                 userProfile = uiState.userProfile,
-                onEditProfile = { /* TODO */ },
+                onEditProfile = onNavigateToEditProfile,
                 onLogout = {
                     viewModel.logout()
                     onNavigateToAuth()
