@@ -12,19 +12,23 @@ import pe.edu.upc.engitrack.core.root.Main
 import pe.edu.upc.engitrack.core.ui.theme.EasyShopTheme
 
 import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule.getLoginViewModel
-import pe.edu.upc.engitrack.features.auth.presentation.login.Login
-
+import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule.getEditProfileViewModel
+import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule.getProfileViewModel
 import pe.edu.upc.engitrack.features.auth.presentation.di.PresentationModule.getRegisterViewModel
+import pe.edu.upc.engitrack.features.auth.presentation.login.Login
 import pe.edu.upc.engitrack.features.auth.presentation.register.Register
-
 import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDetail
 import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDetailViewModel
+import pe.edu.upc.engitrack.features.profile.presentation.editprofile.EditProfile
+import pe.edu.upc.engitrack.features.profile.presentation.profile.Profile
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val loginViewModel = getLoginViewModel()
     val registerViewModel = getRegisterViewModel()
+    val profileViewModel = getProfileViewModel()
+    val editProfileViewModel = getEditProfileViewModel()
 
 
     NavHost(navController, startDestination = Route.Login.route) {
@@ -54,10 +58,14 @@ fun AppNavigation() {
 
 
         composable(Route.Main.route) {
-            Main { productId ->
+            Main(
+                onTapProductCard = { productId ->
                 navController.navigate("${Route.ProductDetail.route}/$productId")
-
-            }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Route.Profile.route)
+                }
+            )
         }
 
         composable(
@@ -77,6 +85,29 @@ fun AppNavigation() {
 
             }
 
+        }
+
+        composable(Route.Profile.route) {
+            Profile(
+                onNavigateToEditProfile = {
+                    navController.navigate(Route.EditProfile.route)
+                },
+                onLogout = {
+                    navController.navigate(Route.Login.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(Route.EditProfile.route) {
+            EditProfile(
+                onSave = {
+                    navController.popBackStack()
+                }
+            )
         }
 
 

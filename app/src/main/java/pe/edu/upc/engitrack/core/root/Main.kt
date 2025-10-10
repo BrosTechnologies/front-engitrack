@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import pe.edu.upc.engitrack.features.home.presentation.home.Home
 
 @Composable
-fun Main(onTapProductCard: (Int) -> Unit) {
+fun Main(onTapProductCard: (Int) -> Unit, onNavigateToProfile: () -> Unit) {
 
     val navigationItems = listOf(
         NavigationItem(Icons.Default.Home, "Home"),
@@ -41,7 +41,11 @@ fun Main(onTapProductCard: (Int) -> Unit) {
                     NavigationBarItem(
                         selected = index == selectedIndex.intValue,
                         onClick = {
-                            selectedIndex.intValue = index
+                            if (item.label == "Profile") {
+                                onNavigateToProfile()
+                            } else {
+                                selectedIndex.intValue = index
+                            }
                         },
                         icon = {
                             Icon(
@@ -63,9 +67,12 @@ fun Main(onTapProductCard: (Int) -> Unit) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Home { id ->
-                onTapProductCard(id)
-            }
+            Home(
+                onTapProductCard = { id ->
+                    onTapProductCard(id)
+                },
+                onNavigateToProfile = onNavigateToProfile
+            )
         }
     }
 }

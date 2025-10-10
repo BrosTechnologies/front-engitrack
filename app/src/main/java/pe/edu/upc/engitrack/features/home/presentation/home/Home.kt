@@ -3,6 +3,7 @@ package pe.edu.upc.engitrack.features.home.presentation.home
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,11 @@ import pe.edu.upc.engitrack.core.ui.components.RoundedIcon
 import pe.edu.upc.engitrack.core.ui.components.WidthSpacer
 
 @Composable
-fun Home(viewModel: HomeViewModel = hiltViewModel(), onTapProductCard: (Int) -> Unit) {
+fun Home(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onTapProductCard: (Int) -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
 
     val categories = listOf("All", "Men", "Women", "Boys", "Girls")
 
@@ -73,6 +78,7 @@ fun Home(viewModel: HomeViewModel = hiltViewModel(), onTapProductCard: (Int) -> 
                     .size(48.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.primary)
+                    .clickable { onNavigateToProfile() }
             ) {
                 Icon(
                     Icons.Default.Person,
