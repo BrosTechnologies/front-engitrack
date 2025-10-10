@@ -12,7 +12,8 @@ composeBom = "2025.09.01"
 coilCompose = "3.3.0" # Coil version for Compose
 materialIconsExtended = "1.7.8" # Material Icons Extended version
 navigationCompose = "2.9.5" # Navigation Compose version
-retrofit = "3.0.0" # Retrofit version
+retrofit = "2.9.0" # Retrofit version
+okhttp = "4.12.0" # OkHttp version
 lifecycleViewmodelCompose = "2.9.4" # ViewModel integration with Jetpack Compose version
 hiltVersion = "2.57.2" # Hilt plugin and library version
 kspVersion= "2.2.20-2.0.3" # KSP plugin version
@@ -47,6 +48,8 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 # Retrofit for network requests
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 
 # ViewModel integration with Jetpack Compose
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }

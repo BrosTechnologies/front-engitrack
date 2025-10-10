@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
@@ -18,16 +18,24 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import pe.edu.upc.engitrack.features.home.presentation.home.Home
+import androidx.hilt.navigation.compose.hiltViewModel
+import pe.edu.upc.engitrack.core.auth.AuthManager
+import pe.edu.upc.engitrack.features.dashboard.presentation.DashboardScreen
+import pe.edu.upc.engitrack.features.projects.presentation.list.ProjectsScreen
 
 @Composable
-fun Main(onTapProductCard: (Int) -> Unit) {
+fun Main(
+    authManager: AuthManager,
+    onTapProductCard: (Int) -> Unit,
+    onNavigateToCreateProject: () -> Unit,
+    onNavigateToProjectDetail: (String) -> Unit
+) {
 
     val navigationItems = listOf(
         NavigationItem(Icons.Default.Home, "Home"),
-        NavigationItem(Icons.Default.Favorite, "Favorite"),
-        NavigationItem(Icons.Default.ShoppingCart, "Cart"),
-        NavigationItem(Icons.Default.Person, "Profile")
+        NavigationItem(Icons.Default.Work, "Proyectos"),
+        NavigationItem(Icons.Default.CalendarToday, "Calendario"),
+        NavigationItem(Icons.Default.Person, "Perfil")
     )
 
     val selectedIndex = remember {
@@ -63,11 +71,32 @@ fun Main(onTapProductCard: (Int) -> Unit) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Home { id ->
-                onTapProductCard(id)
+            when (selectedIndex.intValue) {
+                0 -> DashboardScreen(
+                    authManager = authManager,
+                    onNavigateToProjects = { selectedIndex.intValue = 1 }
+                )
+                1 -> ProjectsScreen(
+                    onProjectClick = onNavigateToProjectDetail,
+                    onCreateProject = onNavigateToCreateProject
+                )
+                2 -> CalendarScreen() // TODO: Implementar
+                3 -> ProfileScreen(authManager) // TODO: Implementar
             }
         }
     }
+}
+
+@Composable
+private fun CalendarScreen() {
+    // TODO: Implementar pantalla de calendario
+    Text("Calendario - En construcción")
+}
+
+@Composable
+private fun ProfileScreen(authManager: AuthManager) {
+    // TODO: Implementar pantalla de perfil
+    Text("Perfil - En construcción")
 }
 
 data class NavigationItem(val icon: ImageVector, val label: String)
