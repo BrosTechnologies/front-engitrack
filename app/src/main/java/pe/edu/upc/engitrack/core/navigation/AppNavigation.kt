@@ -94,6 +94,13 @@ fun AppNavigation() {
                 },
                 onNavigateToProjectDetail = { projectId ->
                     navController.navigate("${Route.ProjectDetail.route}/$projectId")
+                },
+                onNavigateToAuth = {
+                    navController.navigate(Route.Login.route) {
+                        popUpTo(Route.Main.route) {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }

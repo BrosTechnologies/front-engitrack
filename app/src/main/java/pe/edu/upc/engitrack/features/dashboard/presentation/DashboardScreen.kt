@@ -32,10 +32,10 @@ fun DashboardScreen(
     onNavigateToProjects: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val userData = authManager.getUserData()
     
     LaunchedEffect(Unit) {
         viewModel.loadDashboardData()
+        viewModel.loadUserProfile()
     }
 
     Column(
@@ -54,7 +54,7 @@ fun DashboardScreen(
         ) {
             Column {
                 Text(
-                    text = "Hola, ${userData?.fullName?.split(" ")?.firstOrNull() ?: "Usuario"}",
+                    text = "Hola, ${uiState.userProfile?.fullName?.split(" ")?.firstOrNull() ?: "Usuario"}",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black

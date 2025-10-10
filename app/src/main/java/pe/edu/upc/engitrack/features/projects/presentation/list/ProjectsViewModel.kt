@@ -58,15 +58,33 @@ class ProjectsViewModel @Inject constructor(
     }
 
     private fun filterProjects(projects: List<Project>, filter: String): List<Project> {
-        val today = getCurrentDateString()
-        
-        return when (filter) {
-            "En curso" -> projects.filter { it.status == "ACTIVE" }
-            "Completado" -> projects.filter { it.status == "COMPLETED" }
-            "Atrasado" -> projects.filter { 
-                it.status != "COMPLETED" && it.endDate < today 
+        return try {
+            val today = getCurrentDateString()
+            
+            when (filter) {
+                "En curso" -> projects.filter { it.status == "ACTIVE" }
+                "Completado" -> projects.filter { it.status == "COMPLETED" }
+                "Atrasado" -> projects.filter { 
+                    try {
+                        it.status != "COMPLETED" && isDateBefore(it.endDate, today)
+                    } catch (e: Exception) {
+                        android.util.Log.e("ProjectsViewModel", "Error filtering overdue projects", e)
+                        false
+                    }
+                }
+                else -> projects
             }
-            else -> projects
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectsViewModel", "Error filtering projects", e)
+            projects
+        }
+    }
+    
+    private fun isDateBefore(date1: String, date2: String): Boolean {
+        return try {
+            date1 < date2
+        } catch (e: Exception) {
+            false
         }
     }
 

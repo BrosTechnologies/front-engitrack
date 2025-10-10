@@ -11,11 +11,14 @@ import pe.edu.upc.engitrack.core.auth.AuthManager
 import pe.edu.upc.engitrack.features.projects.domain.models.Project
 import pe.edu.upc.engitrack.features.projects.domain.models.Task
 import pe.edu.upc.engitrack.features.projects.domain.repositories.ProjectRepository
+import pe.edu.upc.engitrack.features.profile.domain.models.UserProfile
+import pe.edu.upc.engitrack.features.profile.data.remote.ProfileApiService
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
+    private val profileApiService: ProfileApiService,
     private val authManager: AuthManager
 ) : ViewModel() {
 
@@ -79,6 +82,30 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun loadUserProfile() {
+        viewModelScope.launch {
+            try {
+                val response = profileApiService.getUserProfile()
+                if (response.isSuccessful) {
+                    response.body()?.let { profile ->
+                        android.util.Log.d("DashboardViewModel", "User profile loaded: ${profile.fullName}")
+                        authManager.saveUserData(
+                            profile.id,
+                            profile.email,
+                            profile.role,
+                            profile.fullName
+                        )
+                        _uiState.value = _uiState.value.copy(userProfile = profile)
+                    }
+                } else {
+                    android.util.Log.e("DashboardViewModel", "Error loading user profile: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("DashboardViewModel", "Exception loading user profile", e)
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
@@ -97,5 +124,6 @@ data class DashboardUiState(
     val isLoading: Boolean = false,
     val activeProjects: List<Project> = emptyList(),
     val todayTasks: List<Task> = emptyList(),
+    val userProfile: UserProfile? = null,
     val errorMessage: String? = null
 )
