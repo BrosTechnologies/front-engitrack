@@ -91,16 +91,16 @@ fun PriorityBadge(
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = priority.color.copy(alpha = 0.1f),
-        border = BorderStroke(1.dp, priority.color),
+        color = priority.color.copy(alpha = 0.15f), // Más opacidad para mejor visibilidad
+        border = BorderStroke(1.5.dp, priority.color), // Border más grueso
         modifier = modifier
     ) {
         Text(
             text = priority.displayName,
             color = priority.color,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+            fontWeight = FontWeight.SemiBold, // Más peso en la fuente
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp) // Más padding
         )
     }
 }
