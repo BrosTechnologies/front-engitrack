@@ -8,7 +8,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pe.edu.upc.engitrack.core.auth.AuthManager
+import pe.edu.upc.engitrack.features.projects.domain.models.Priority
+import pe.edu.upc.engitrack.features.projects.presentation.components.PrioritySelector
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,11 +34,9 @@ fun CreateProjectScreen(
     var projectName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
-    var selectedPriority by remember { mutableStateOf("") }
-    var isPriorityDropdownExpanded by remember { mutableStateOf(false) }
+    var selectedPriority by remember { mutableStateOf(Priority.MEDIUM) }
     var isDatePickerVisible by remember { mutableStateOf(false) }
     
-    val priorities = listOf("Alta", "Media", "Baja")
     val uiState by viewModel.uiState.collectAsState()
     
     // Mostrar DatePicker
@@ -182,7 +181,7 @@ fun CreateProjectScreen(
                     )
                 )
                 
-                // Prioridad (por ahora solo visual, no se envía al backend)
+                // Prioridad
                 Text(
                     text = "Prioridad",
                     fontSize = 14.sp,
@@ -190,48 +189,11 @@ fun CreateProjectScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
-                ExposedDropdownMenuBox(
-                    expanded = isPriorityDropdownExpanded,
-                    onExpandedChange = { isPriorityDropdownExpanded = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 24.dp)
-                ) {
-                    OutlinedTextField(
-                        value = selectedPriority,
-                        onValueChange = { },
-                        readOnly = true,
-                        placeholder = { Text("Seleccionar prioridad") },
-                        trailingIcon = {
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = Color(0xFFF0F0F0),
-                            unfocusedContainerColor = Color(0xFFF0F0F0)
-                        )
-                    )
-                    
-                    ExposedDropdownMenu(
-                        expanded = isPriorityDropdownExpanded,
-                        onDismissRequest = { isPriorityDropdownExpanded = false }
-                    ) {
-                        priorities.forEach { priority ->
-                            DropdownMenuItem(
-                                text = { Text(priority) },
-                                onClick = {
-                                    selectedPriority = priority
-                                    isPriorityDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
+                PrioritySelector(
+                    selectedPriority = selectedPriority,
+                    onPrioritySelected = { selectedPriority = it },
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
                 
                 // Miembros (hardcodeado por ahora)
                 Text(
@@ -277,6 +239,7 @@ fun CreateProjectScreen(
                                 startDate = currentDate,
                                 endDate = endDate,
                                 budget = 0.0,
+                                priority = selectedPriority.value,
                                 ownerUserId = userId,
                                 tasks = emptyList()
                             )

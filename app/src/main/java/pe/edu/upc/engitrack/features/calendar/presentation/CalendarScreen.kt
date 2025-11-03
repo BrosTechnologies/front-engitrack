@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import pe.edu.upc.engitrack.features.calendar.presentation.components.CalendarGrid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,42 +99,13 @@ fun CalendarScreen(
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        Card(
+                        // Calendar Grid
+                        CalendarGrid(
+                            projects = uiState.upcomingProjects,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Default.CalendarToday,
-                                        contentDescription = "Calendario",
-                                        tint = Color(0xFF007AFF),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Octubre 2025",
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                
-                                Spacer(modifier = Modifier.height(8.dp))
-                                
-                                Text(
-                                    text = "Proyectos y fechas importantes",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
-                                )
-                            }
-                        }
+                                .padding(bottom = 24.dp)
+                        )
                         
                         Text(
                             text = "Próximos eventos",

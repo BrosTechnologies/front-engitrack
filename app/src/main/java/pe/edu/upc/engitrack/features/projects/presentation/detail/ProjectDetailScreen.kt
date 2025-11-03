@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import pe.edu.upc.engitrack.features.projects.domain.models.Priority
+import pe.edu.upc.engitrack.features.projects.presentation.components.PriorityBadge
 
 data class TaskItem(
     val id: Int,
@@ -133,19 +135,10 @@ fun ProjectDetailScreen(
                                     fontSize = 14.sp,
                                     color = Color.Gray
                                 )
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFFFEBCD)
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Media",
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                                        fontSize = 14.sp,
-                                        color = Color(0xFFFF8C00)
-                                    )
-                                }
+                                PriorityBadge(
+                                    priority = Priority.MEDIUM,  // TODO: Obtener del proyecto real
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
                             }
                         }
                     }

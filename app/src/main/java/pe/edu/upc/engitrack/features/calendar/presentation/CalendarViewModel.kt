@@ -24,6 +24,7 @@ data class CalendarProject(
     val endDate: String,
     val day: String,
     val dayNumber: String,
+    val priority: String? = "MEDIUM",
     val isOverdue: Boolean,
     val isToday: Boolean,
     val isThisWeek: Boolean
@@ -78,6 +79,7 @@ class CalendarViewModel @Inject constructor(
                                 endDate = project.endDate,
                                 day = endDate?.let { dayFormat.format(it) } ?: "",
                                 dayNumber = endDate?.let { dayNumberFormat.format(it) } ?: "",
+                                priority = project.priority,
                                 isOverdue = isOverdue,
                                 isToday = isToday,
                                 isThisWeek = isThisWeek
@@ -126,6 +128,7 @@ class CalendarViewModel @Inject constructor(
             endDate = dateFormat.format(today.time),
             day = dayFormat.format(today.time),
             dayNumber = dayNumberFormat.format(today.time),
+            priority = "HIGH",
             isOverdue = false,
             isToday = true,
             isThisWeek = true
@@ -141,6 +144,7 @@ class CalendarViewModel @Inject constructor(
             endDate = dateFormat.format(in3Days.time),
             day = dayFormat.format(in3Days.time),
             dayNumber = dayNumberFormat.format(in3Days.time),
+            priority = "MEDIUM",
             isOverdue = false,
             isToday = false,
             isThisWeek = true
@@ -156,6 +160,7 @@ class CalendarViewModel @Inject constructor(
             endDate = dateFormat.format(yesterday.time),
             day = dayFormat.format(yesterday.time),
             dayNumber = dayNumberFormat.format(yesterday.time),
+            priority = "LOW",
             isOverdue = true,
             isToday = false,
             isThisWeek = true

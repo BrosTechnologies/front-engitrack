@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pe.edu.upc.engitrack.features.projects.domain.models.Project
+import pe.edu.upc.engitrack.features.projects.domain.models.Priority
+import pe.edu.upc.engitrack.features.projects.presentation.components.PriorityBadge
 
 @Composable
 fun ProjectsScreen(
@@ -228,21 +230,14 @@ private fun ProjectListItem(
                         modifier = Modifier.padding(top = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Prioridad: ",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
+                        // Safe priority handling
+                        val safePriority = Priority.fromString(project.priority ?: "MEDIUM")
+                        PriorityBadge(priority = safePriority)
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
                         
                         Text(
-                            text = getPriorityText(project),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = getPriorityColor(project)
-                        )
-                        
-                        Text(
-                            text = " | Fecha límite: ${project.endDate}",
+                            text = "Fecha límite: ${project.endDate}",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
@@ -288,30 +283,4 @@ private fun ProjectListItem(
             )
         }
     }
-}
-
-private fun getPriorityText(project: Project): String {
-    val today = getCurrentDateString()
-    return when {
-        project.tasks.any { it.status == "PENDING" && it.dueDate < today } -> "Alta"
-        project.tasks.size > 5 -> "Media"
-        else -> "Baja"
-    }
-}
-
-private fun getPriorityColor(project: Project): Color {
-    return when (getPriorityText(project)) {
-        "Alta" -> Color(0xFFE53E3E)
-        "Media" -> Color(0xFFFF9800)
-        else -> Color(0xFF4CAF50)
-    }
-}
-
-private fun getCurrentDateString(): String {
-    val calendar = java.util.Calendar.getInstance()
-    val year = calendar.get(java.util.Calendar.YEAR)
-    val month = calendar.get(java.util.Calendar.MONTH) + 1
-    val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
-    
-    return String.format("%04d-%02d-%02d", year, month, day)
 }

@@ -32,6 +32,7 @@ class CreateProjectViewModel @Inject constructor(
         startDate: String,
         endDate: String,
         budget: Double = 0.0,
+        priority: Int = 1, // 0=LOW, 1=MEDIUM, 2=HIGH
         ownerUserId: String,
         tasks: List<CreateTaskRequest> = emptyList()
     ) {
@@ -44,6 +45,7 @@ class CreateProjectViewModel @Inject constructor(
                     startDate = startDate,
                     endDate = endDate,
                     budget = budget,
+                    priority = priority,
                     ownerUserId = ownerUserId,
                     tasks = tasks
                 )

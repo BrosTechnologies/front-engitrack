@@ -30,6 +30,18 @@ interface ProjectApiService {
         @Body updateRequest: UpdateProjectRequest
     ): Response<Project>
     
+    @PATCH("/api/projects/{id}/priority")
+    suspend fun updatePriority(
+        @Path("id") projectId: String,
+        @Body request: UpdatePriorityRequest
+    ): Response<Project>
+    
+    @PATCH("/api/projects/{id}/priority/string")
+    suspend fun updatePriorityString(
+        @Path("id") projectId: String,
+        @Body request: UpdatePriorityStringRequest
+    ): Response<Project>
+    
     @POST("/api/projects/{id}/tasks")
     suspend fun createTask(
         @Path("id") projectId: String,
