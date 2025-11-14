@@ -32,6 +32,7 @@ fun WorkersSelectorScreen(
     projectId: String,
     projectStartDate: String,
     projectEndDate: String,
+    projectOwnerId: String,
     onNavigateBack: () -> Unit,
     onWorkerSelected: (String, String, String) -> Unit, // workerId, startDate, endDate
     viewModel: WorkersListViewModel = hiltViewModel()
@@ -40,6 +41,11 @@ fun WorkersSelectorScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedWorker by remember { mutableStateOf<Worker?>(null) }
     var showDateDialog by remember { mutableStateOf(false) }
+    
+    // Load workers with projectOwnerId for filtering
+    LaunchedEffect(projectOwnerId) {
+        viewModel.loadWorkers(projectOwnerId = projectOwnerId)
+    }
 
     Scaffold(
         topBar = {
@@ -68,7 +74,7 @@ fun WorkersSelectorScreen(
                 value = searchQuery,
                 onValueChange = { 
                     searchQuery = it
-                    viewModel.filterWorkers(it)
+                    viewModel.filterWorkers(it, projectOwnerId)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -81,7 +87,7 @@ fun WorkersSelectorScreen(
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { 
                             searchQuery = ""
-                            viewModel.filterWorkers("")
+                            viewModel.filterWorkers("", projectOwnerId)
                         }) {
                             Icon(Icons.Default.Close, contentDescription = "Limpiar")
                         }
