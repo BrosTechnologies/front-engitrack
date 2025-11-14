@@ -22,12 +22,15 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pe.edu.upc.engitrack.features.workers.domain.models.Worker
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkersSelectorScreen(
     projectId: String,
+    projectStartDate: String,
     projectEndDate: String,
     onNavigateBack: () -> Unit,
     onWorkerSelected: (String, String, String) -> Unit, // workerId, startDate, endDate
@@ -172,6 +175,7 @@ fun WorkersSelectorScreen(
     if (showDateDialog && selectedWorker != null) {
         AssignmentDateDialog(
             worker = selectedWorker!!,
+            projectStartDate = projectStartDate,
             projectEndDate = projectEndDate,
             onDismiss = { 
                 showDateDialog = false
@@ -247,6 +251,7 @@ fun WorkerSelectionCard(
 @Composable
 fun AssignmentDateDialog(
     worker: Worker,
+    projectStartDate: String,
     projectEndDate: String,
     onDismiss: () -> Unit,
     onConfirm: (String, String) -> Unit
@@ -257,8 +262,40 @@ fun AssignmentDateDialog(
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
-    val startDatePickerState = rememberDatePickerState()
-    val endDatePickerState = rememberDatePickerState()
+    // Parse project dates to LocalDate and get millis
+    val projectStart = try { LocalDate.parse(projectStartDate) } catch (e: Exception) { LocalDate.now() }
+    val projectEnd = try { LocalDate.parse(projectEndDate) } catch (e: Exception) { LocalDate.now().plusMonths(1) }
+    
+    val projectStartMillis = projectStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val projectEndMillis = projectEnd.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    // DatePicker states with calendar constraints
+    val startDatePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = projectStartMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis >= projectStartMillis && utcTimeMillis <= projectEndMillis
+            }
+        }
+    )
+    
+    val endDatePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = projectStartMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val selectedStart = if (startDate.isNotEmpty()) {
+                    try {
+                        LocalDate.parse(startDate).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    } catch (e: Exception) {
+                        projectStartMillis
+                    }
+                } else {
+                    projectStartMillis
+                }
+                return utcTimeMillis >= selectedStart && utcTimeMillis <= projectEndMillis
+            }
+        }
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -290,8 +327,15 @@ fun AssignmentDateDialog(
 
                 // End Date
                 OutlinedButton(
-                    onClick = { showEndDatePicker = true },
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = { 
+                        if (startDate.isEmpty()) {
+                            errorMessage = "Selecciona primero la fecha de inicio"
+                        } else {
+                            showEndDatePicker = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = startDate.isNotEmpty()
                 ) {
                     Text(
                         text = if (endDate.isEmpty()) 
@@ -313,7 +357,7 @@ fun AssignmentDateDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val validation = validateDates(startDate, endDate, projectEndDate)
+                    val validation = validateDates(startDate, endDate, projectStartDate, projectEndDate)
                     if (validation != null) {
                         errorMessage = validation
                     } else {
@@ -383,28 +427,35 @@ fun AssignmentDateDialog(
     }
 }
 
-private fun validateDates(startDate: String, endDate: String, projectEndDate: String): String? {
+private fun validateDates(
+    startDate: String, 
+    endDate: String, 
+    projectStartDate: String,
+    projectEndDate: String
+): String? {
     return when {
         startDate.isEmpty() -> "Selecciona una fecha de inicio"
         endDate.isEmpty() -> "Selecciona una fecha de fin"
         else -> {
             try {
-                val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val start = formatter.parse(startDate)
-                val end = formatter.parse(endDate)
-                val projectEnd = formatter.parse(projectEndDate)
+                val start = LocalDate.parse(startDate)
+                val end = LocalDate.parse(endDate)
+                val projectStart = LocalDate.parse(projectStartDate)
+                val projectEnd = LocalDate.parse(projectEndDate)
 
                 when {
-                    start == null || end == null || projectEnd == null -> 
-                        "Error al validar fechas"
-                    start.after(end) -> 
-                        "La fecha de inicio debe ser anterior a la fecha de fin"
-                    end.after(projectEnd) -> 
-                        "La fecha de fin no puede ser posterior al fin del proyecto ($projectEndDate)"
+                    start.isBefore(projectStart) -> 
+                        "La fecha de inicio debe estar dentro del rango del proyecto (desde ${projectStartDate})"
+                    start.isAfter(projectEnd) -> 
+                        "La fecha de inicio no puede ser posterior a la fecha límite del proyecto (${projectEndDate})"
+                    end.isBefore(start) -> 
+                        "La fecha de fin debe ser mayor o igual a la fecha de inicio"
+                    end.isAfter(projectEnd) -> 
+                        "La fecha de fin no puede ser posterior a la fecha límite del proyecto (${projectEndDate})"
                     else -> null
                 }
             } catch (e: Exception) {
-                "Error al validar fechas"
+                "Error al validar fechas: ${e.message}"
             }
         }
     }

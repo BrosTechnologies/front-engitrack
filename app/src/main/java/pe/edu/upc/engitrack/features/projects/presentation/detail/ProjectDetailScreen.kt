@@ -44,7 +44,7 @@ import java.util.*
 fun ProjectDetailScreen(
     projectId: String,
     onNavigateBack: () -> Unit,
-    onNavigateToWorkersSelector: (String) -> Unit = {},
+    onNavigateToWorkersSelector: (String, String) -> Unit = {_, _ -> },
     viewModel: ProjectDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -399,7 +399,7 @@ fun ProjectDetailScreen(
                         currentUserId = currentUserId,
                         currentUserRole = currentUserRole,
                         isProjectCompleted = project.status == "COMPLETED",
-                        onNavigateToWorkersSelector = { onNavigateToWorkersSelector(project.endDate) }
+                        onNavigateToWorkersSelector = { onNavigateToWorkersSelector(project.startDate, project.endDate) }
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))

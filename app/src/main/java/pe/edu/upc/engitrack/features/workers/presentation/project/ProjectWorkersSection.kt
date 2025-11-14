@@ -34,6 +34,8 @@ fun ProjectWorkersSection(
     val uiState by viewModel.uiState.collectAsState()
     var workerToDelete by remember { mutableStateOf<ProjectWorker?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(projectId) {
         viewModel.loadProjectWorkers(projectId)
@@ -46,6 +48,19 @@ fun ProjectWorkersSection(
             showDeleteDialog = false
         }
     }
+    
+    // Show error as Snackbar
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            if (!uiState.isLoading && uiState.workers.isNotEmpty()) {
+                snackbarHostState.showSnackbar(
+                    message = error,
+                    duration = SnackbarDuration.Short
+                )
+                viewModel.clearError()
+            }
+        }
+    }
 
     // Check if user can manage workers
     val canManageWorkers = !isProjectCompleted && 
@@ -53,11 +68,12 @@ fun ProjectWorkersSection(
          currentUserRole == "SUPERVISOR" || 
          currentUserRole == "CONTRACTOR")
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
         // Header
         Row(
             modifier = Modifier
@@ -218,6 +234,13 @@ fun ProjectWorkersSection(
                     Text("Cancelar")
                 }
             }
+        )
+    }
+        
+        // Snackbar for errors
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
 }
