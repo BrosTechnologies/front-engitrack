@@ -16,10 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import pe.edu.upc.engitrack.features.profile.domain.models.UserProfile
 
 @Composable
@@ -29,9 +32,23 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
     
-    LaunchedEffect(Unit) {
-        viewModel.loadUserProfile()
+    // Observador de ciclo de vida para refrescar stats cuando la pantalla se reanuda
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Refrescar datos del perfil y estadísticas
+                viewModel.loadUserProfile()
+                viewModel.loadUserStats()
+            }
+        }
+        
+        lifecycleOwner.lifecycle.addObserver(observer)
+        
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
     
     when {
@@ -48,12 +65,19 @@ fun ProfileScreen(
         uiState.error != null -> {
             ErrorScreen(
                 error = uiState.error!!,
-                onRetry = { viewModel.loadUserProfile() }
+                onRetry = { 
+                    viewModel.loadUserProfile()
+                    viewModel.loadUserStats()
+                }
             )
         }
         else -> {
             ProfileContent(
                 userProfile = uiState.userProfile,
+                projectsCount = uiState.projectsCount,
+                tasksCount = uiState.tasksCount,
+                completedTasksCount = uiState.completedTasksCount,
+                isLoadingStats = uiState.isLoadingStats,
                 onEditProfile = onNavigateToEditProfile,
                 onLogout = {
                     viewModel.logout()
@@ -67,6 +91,10 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     userProfile: UserProfile?,
+    projectsCount: Int,
+    tasksCount: Int,
+    completedTasksCount: Int,
+    isLoadingStats: Boolean,
     onEditProfile: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -162,22 +190,36 @@ fun ProfileContent(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    StatItem(
-                        title = "Proyectos",
-                        value = "8"
-                    )
-                    StatItem(
-                        title = "Tareas",
-                        value = "24"
-                    )
-                    StatItem(
-                        title = "Completadas",
-                        value = "18"
-                    )
+                if (isLoadingStats) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color(0xFF007AFF),
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        StatItem(
+                            title = "Proyectos",
+                            value = projectsCount.toString()
+                        )
+                        StatItem(
+                            title = "Tareas",
+                            value = tasksCount.toString()
+                        )
+                        StatItem(
+                            title = "Completadas",
+                            value = completedTasksCount.toString()
+                        )
+                    }
                 }
             }
         }
