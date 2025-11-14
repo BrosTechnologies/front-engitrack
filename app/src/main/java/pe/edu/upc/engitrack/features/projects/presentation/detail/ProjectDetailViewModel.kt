@@ -24,6 +24,8 @@ data class ProjectDetailUiState(
     val isUpdatingStatus: Boolean = false,
     val isCompletingProject: Boolean = false,
     val isUpdatingProject: Boolean = false,
+    val isDeletingProject: Boolean = false,
+    val projectDeleted: Boolean = false,
     val operationSuccess: Boolean = false
 )
 
@@ -128,12 +130,13 @@ class ProjectDetailViewModel @Inject constructor(
         }
     }
     
-    fun updateProject(projectId: String, name: String, endDate: String, budget: Double, priority: Priority) {
+    fun updateProject(projectId: String, name: String, description: String?, endDate: String, budget: Double, priority: Priority) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUpdatingProject = true, error = null)
             
             val updateRequest = UpdateProjectRequest(
                 name = name,
+                description = description,
                 budget = budget,
                 endDate = endDate,
                 priority = priority.value
@@ -186,6 +189,27 @@ class ProjectDetailViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isCompletingProject = false,
                         error = errorMessage
+                    )
+                }
+            )
+        }
+    }
+    
+    fun deleteProject(projectId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isDeletingProject = true, error = null)
+            
+            projectRepository.deleteProject(projectId).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isDeletingProject = false,
+                        projectDeleted = true
+                    )
+                },
+                onFailure = { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isDeletingProject = false,
+                        error = "No se pudo eliminar el proyecto. Inténtalo de nuevo."
                     )
                 }
             )

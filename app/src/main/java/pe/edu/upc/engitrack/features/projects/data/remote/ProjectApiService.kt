@@ -61,6 +61,11 @@ interface ProjectApiService {
         @Path("taskId") taskId: String
     ): Response<Unit>
     
+    @DELETE("/api/projects/{id}")
+    suspend fun deleteProject(
+        @Path("id") id: String
+    ): Response<Unit>
+    
     @PATCH("/api/projects/{id}/complete")
     suspend fun completeProject(
         @Path("id") id: String
