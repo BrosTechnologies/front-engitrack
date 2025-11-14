@@ -5,13 +5,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
@@ -20,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +32,7 @@ import pe.edu.upc.engitrack.features.projects.domain.models.Priority
 import pe.edu.upc.engitrack.features.projects.domain.models.Task
 import pe.edu.upc.engitrack.features.projects.domain.models.TaskStatus
 import pe.edu.upc.engitrack.features.projects.presentation.components.PriorityBadge
+import pe.edu.upc.engitrack.features.projects.presentation.components.PrioritySelector
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,13 +49,38 @@ fun ProjectDetailScreen(
     var newTaskTitle by remember { mutableStateOf("") }
     var newTaskDueDate by remember { mutableStateOf("") }
     var isTaskDatePickerVisible by remember { mutableStateOf(false) }
+    var taskDateValidationError by remember { mutableStateOf<String?>(null) }
     var showStatusDialog by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<Task?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     var showCompleteProjectDialog by remember { mutableStateOf(false) }
+    var showEditProjectDialog by remember { mutableStateOf(false) }
+    var showDropdownMenu by remember { mutableStateOf(false) }
     
-    val taskDatePickerState = rememberDatePickerState()
+    // Estados para edición de proyecto
+    var editProjectName by remember { mutableStateOf("") }
+    var editProjectEndDate by remember { mutableStateOf("") }
+    var editProjectBudget by remember { mutableStateOf("") }
+    var editProjectPriority by remember { mutableStateOf(Priority.MEDIUM) }
+    var isEditProjectDatePickerVisible by remember { mutableStateOf(false) }
+    var editProjectBudgetError by remember { mutableStateOf<String?>(null) }
+    
+    val taskDatePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val project = uiState.project ?: return true
+                val projectEndDateMillis = try {
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        .parse(project.endDate)?.time ?: Long.MAX_VALUE
+                } catch (e: Exception) {
+                    Long.MAX_VALUE
+                }
+                return utcTimeMillis <= projectEndDateMillis
+            }
+        }
+    )
+    val editProjectDatePickerState = rememberDatePickerState()
     
     // Cargar el proyecto al iniciar
     LaunchedEffect(projectId) {
@@ -63,7 +94,7 @@ fun ProjectDetailScreen(
         }
     }
     
-    // DatePicker Dialog para fecha de tarea
+    // DatePicker Dialog para fecha de tarea con validación
     if (isTaskDatePickerVisible) {
         DatePickerDialog(
             onDismissRequest = { isTaskDatePickerVisible = false },
@@ -90,6 +121,33 @@ fun ProjectDetailScreen(
         }
     }
     
+    // DatePicker Dialog para editar fecha límite del proyecto
+    if (isEditProjectDatePickerVisible) {
+        DatePickerDialog(
+            onDismissRequest = { isEditProjectDatePickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        editProjectDatePickerState.selectedDateMillis?.let { millis ->
+                            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            editProjectEndDate = formatter.format(Date(millis))
+                        }
+                        isEditProjectDatePickerVisible = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isEditProjectDatePickerVisible = false }) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = editProjectDatePickerState)
+        }
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -100,10 +158,45 @@ fun ProjectDetailScreen(
                     }
                 },
                 actions = {
-                    // Botón para completar proyecto (solo si no está completado)
+                    // Botón de menú de opciones (solo si no está completado)
                     if (uiState.project?.status != "COMPLETED") {
-                        IconButton(onClick = { showCompleteProjectDialog = true }) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = "Completar proyecto")
+                        Box {
+                            IconButton(onClick = { showDropdownMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "Más opciones")
+                            }
+                            
+                            DropdownMenu(
+                                expanded = showDropdownMenu,
+                                onDismissRequest = { showDropdownMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Editar proyecto") },
+                                    onClick = {
+                                        // Pre-llenar datos del proyecto
+                                        uiState.project?.let { project ->
+                                            editProjectName = project.name
+                                            editProjectEndDate = project.endDate
+                                            editProjectBudget = project.budget.toString()
+                                            editProjectPriority = Priority.fromString(project.priority)
+                                        }
+                                        showEditProjectDialog = true
+                                        showDropdownMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Edit, contentDescription = null)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Completar proyecto") },
+                                    onClick = {
+                                        showCompleteProjectDialog = true
+                                        showDropdownMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null)
+                                    }
+                                )
+                            }
                         }
                     }
                 },
@@ -237,6 +330,23 @@ fun ProjectDetailScreen(
                                     )
                                 }
                             }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // Presupuesto
+                            Column {
+                                Text(
+                                    text = "Presupuesto",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = "S/ ${String.format("%.2f", project.budget)}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF007AFF)
+                                )
+                            }
                         }
                     }
                     
@@ -310,6 +420,7 @@ fun ProjectDetailScreen(
                 showAddTaskDialog = false
                 newTaskTitle = ""
                 newTaskDueDate = ""
+                taskDateValidationError = null
             },
             title = { Text("Nueva Tarea", fontWeight = FontWeight.Bold) },
             text = {
@@ -335,18 +446,46 @@ fun ProjectDetailScreen(
                                 Icon(Icons.Default.CalendarToday, contentDescription = "Calendario")
                             }
                         },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        isError = taskDateValidationError != null
                     )
+                    
+                    // Mostrar mensaje de validación si existe
+                    taskDateValidationError?.let { error ->
+                        Text(
+                            text = error,
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    
+                    // Mostrar información sobre la fecha límite del proyecto
+                    uiState.project?.let { project ->
+                        Text(
+                            text = "Fecha límite del proyecto: ${project.endDate}",
+                            color = Color.Gray,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         if (newTaskTitle.isNotBlank() && newTaskDueDate.isNotBlank()) {
-                            viewModel.createTask(projectId, newTaskTitle, newTaskDueDate)
-                            newTaskTitle = ""
-                            newTaskDueDate = ""
-                            showAddTaskDialog = false
+                            // Validar que la fecha de la tarea no sea posterior a la fecha límite del proyecto
+                            val projectEndDate = uiState.project?.endDate ?: ""
+                            if (projectEndDate.isNotBlank() && isTaskDateAfterProjectEndDate(newTaskDueDate, projectEndDate)) {
+                                taskDateValidationError = "La fecha de la tarea no puede ser posterior a la fecha límite del proyecto ($projectEndDate)"
+                            } else {
+                                viewModel.createTask(projectId, newTaskTitle, newTaskDueDate)
+                                newTaskTitle = ""
+                                newTaskDueDate = ""
+                                taskDateValidationError = null
+                                showAddTaskDialog = false
+                            }
                         }
                     },
                     enabled = newTaskTitle.isNotBlank() && newTaskDueDate.isNotBlank() && !uiState.isCreatingTask
@@ -363,6 +502,7 @@ fun ProjectDetailScreen(
                     showAddTaskDialog = false
                     newTaskTitle = ""
                     newTaskDueDate = ""
+                    taskDateValidationError = null
                 }) {
                     Text("Cancelar")
                 }
@@ -498,6 +638,132 @@ fun ProjectDetailScreen(
             }
         )
     }
+    
+    // Dialog para editar proyecto
+    if (showEditProjectDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showEditProjectDialog = false
+                editProjectBudgetError = null
+            },
+            title = { Text("Editar Proyecto", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    // Nombre del proyecto
+                    OutlinedTextField(
+                        value = editProjectName,
+                        onValueChange = { editProjectName = it },
+                        label = { Text("Nombre del proyecto") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Fecha límite
+                    OutlinedTextField(
+                        value = editProjectEndDate,
+                        onValueChange = { },
+                        label = { Text("Fecha límite") },
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        trailingIcon = {
+                            IconButton(onClick = { isEditProjectDatePickerVisible = true }) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = "Calendario")
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Presupuesto
+                    OutlinedTextField(
+                        value = editProjectBudget,
+                        onValueChange = { 
+                            editProjectBudget = it
+                            // Validar que sea un número
+                            if (it.isNotEmpty() && it.toDoubleOrNull() == null) {
+                                editProjectBudgetError = "Ingrese un valor numérico válido"
+                            } else {
+                                editProjectBudgetError = null
+                            }
+                        },
+                        label = { Text("Presupuesto (S/)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        isError = editProjectBudgetError != null
+                    )
+                    
+                    editProjectBudgetError?.let { error ->
+                        Text(
+                            text = error,
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
+                    
+                    if (editProjectBudgetError == null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
+                    // Prioridad
+                    Text(
+                        text = "Prioridad",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    PrioritySelector(
+                        selectedPriority = editProjectPriority,
+                        onPrioritySelected = { editProjectPriority = it }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (editProjectName.isNotBlank() && editProjectEndDate.isNotBlank() && editProjectBudgetError == null) {
+                            val budget = editProjectBudget.toDoubleOrNull() ?: 0.0
+                            viewModel.updateProject(
+                                projectId = projectId,
+                                name = editProjectName,
+                                endDate = editProjectEndDate,
+                                budget = budget,
+                                priority = editProjectPriority
+                            )
+                            showEditProjectDialog = false
+                            editProjectBudgetError = null
+                        }
+                    },
+                    enabled = editProjectName.isNotBlank() && editProjectEndDate.isNotBlank() && 
+                              editProjectBudgetError == null && !uiState.isUpdatingProject
+                ) {
+                    if (uiState.isUpdatingProject) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                    } else {
+                        Text("Guardar")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showEditProjectDialog = false
+                    editProjectBudgetError = null
+                }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -591,5 +857,21 @@ fun TaskCard(
                 }
             }
         }
+    }
+}
+
+private fun isTaskDateAfterProjectEndDate(taskDate: String, projectEndDate: String): Boolean {
+    return try {
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val task = formatter.parse(taskDate)
+        val project = formatter.parse(projectEndDate)
+        
+        if (task != null && project != null) {
+            task.after(project)
+        } else {
+            false
+        }
+    } catch (e: Exception) {
+        false
     }
 }

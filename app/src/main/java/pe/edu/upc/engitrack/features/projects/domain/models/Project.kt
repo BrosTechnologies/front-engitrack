@@ -40,7 +40,8 @@ data class CreateTaskRequest(
 data class UpdateProjectRequest(
     val name: String,
     val budget: Double,
-    val endDate: String
+    val endDate: String,
+    val priority: Int // 0=LOW, 1=MEDIUM, 2=HIGH
 )
 
 data class UpdatePriorityRequest(
