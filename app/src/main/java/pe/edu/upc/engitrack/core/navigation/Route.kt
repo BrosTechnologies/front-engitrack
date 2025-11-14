@@ -13,8 +13,9 @@ sealed class Route(val route: String){
         const val argument = "id"
     }
     object WorkersSelector: Route("workers_selector") {
-        const val routeWithArgument = "workers_selector/{projectId}/{projectEndDate}"
+        const val routeWithArgument = "workers_selector/{projectId}/{projectStartDate}/{projectEndDate}"
         const val argumentProjectId = "projectId"
+        const val argumentProjectStartDate = "projectStartDate"
         const val argumentProjectEndDate = "projectEndDate"
     }
     object ProductDetail: Route("product_detail") {

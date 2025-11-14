@@ -175,9 +175,9 @@ fun AppNavigation() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onNavigateToWorkersSelector = { projectEndDate ->
-                        // Navigate with both projectId and projectEndDate
-                        navController.navigate("workers_selector/$projectId/$projectEndDate")
+                    onNavigateToWorkersSelector = { projectStartDate, projectEndDate ->
+                        // Navigate with projectId, projectStartDate and projectEndDate
+                        navController.navigate("workers_selector/$projectId/$projectStartDate/$projectEndDate")
                     }
                 )
             }
@@ -189,6 +189,9 @@ fun AppNavigation() {
                 navArgument(Route.WorkersSelector.argumentProjectId) {
                     type = NavType.StringType
                 },
+                navArgument(Route.WorkersSelector.argumentProjectStartDate) {
+                    type = NavType.StringType
+                },
                 navArgument(Route.WorkersSelector.argumentProjectEndDate) {
                     type = NavType.StringType
                 }
@@ -196,12 +199,14 @@ fun AppNavigation() {
         ) { navBackStackEntry ->
             navBackStackEntry.arguments?.let { arguments ->
                 val projectId = arguments.getString(Route.WorkersSelector.argumentProjectId) ?: ""
+                val projectStartDate = arguments.getString(Route.WorkersSelector.argumentProjectStartDate) ?: ""
                 val projectEndDate = arguments.getString(Route.WorkersSelector.argumentProjectEndDate) ?: ""
                 
                 val projectWorkersViewModel: pe.edu.upc.engitrack.features.workers.presentation.project.ProjectWorkersViewModel = hiltViewModel()
                 
                 WorkersSelectorScreen(
                     projectId = projectId,
+                    projectStartDate = projectStartDate,
                     projectEndDate = projectEndDate,
                     onNavigateBack = {
                         navController.popBackStack()

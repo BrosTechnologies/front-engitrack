@@ -77,10 +77,14 @@ class ProjectWorkersViewModel @Inject constructor(
                 .onFailure { exception ->
                     _uiState.value = _uiState.value.copy(
                         isRemoving = false,
-                        error = exception.message
+                        error = exception.message ?: "No se pudo eliminar la asignación. Inténtalo nuevamente."
                     )
                 }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 
     fun resetOperationSuccess() {
