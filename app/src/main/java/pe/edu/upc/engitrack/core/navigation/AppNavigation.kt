@@ -25,6 +25,9 @@ import pe.edu.upc.engitrack.features.home.presentation.productdetail.ProductDeta
 import pe.edu.upc.engitrack.features.projects.presentation.create.CreateProjectScreen
 import pe.edu.upc.engitrack.features.projects.presentation.detail.ProjectDetailScreen
 import pe.edu.upc.engitrack.features.profile.presentation.EditProfileScreen
+import pe.edu.upc.engitrack.features.workers.presentation.assignments.WorkerAssignmentsScreen
+import pe.edu.upc.engitrack.features.workers.presentation.form.WorkerFormScreen
+import pe.edu.upc.engitrack.features.workers.presentation.list.WorkersSelectorScreen
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -105,6 +108,12 @@ fun AppNavigation() {
                 },
                 onNavigateToEditProfile = {
                     navController.navigate(Route.EditProfile.route)
+                },
+                onNavigateToWorkerForm = {
+                    navController.navigate(Route.WorkerForm.route)
+                },
+                onNavigateToWorkerAssignments = {
+                    navController.navigate(Route.WorkerAssignments.route)
                 }
             )
         }
@@ -133,6 +142,25 @@ fun AppNavigation() {
                 }
             )
         }
+        
+        composable(Route.WorkerForm.route) {
+            WorkerFormScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        composable(Route.WorkerAssignments.route) {
+            WorkerAssignmentsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToProject = { projectId ->
+                    navController.navigate("${Route.ProjectDetail.route}/$projectId")
+                }
+            )
+        }
 
         composable(
             route = Route.ProjectDetail.routeWithArgument,
@@ -145,6 +173,42 @@ fun AppNavigation() {
                 ProjectDetailScreen(
                     projectId = projectId,
                     onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToWorkersSelector = { projectEndDate ->
+                        // Navigate with both projectId and projectEndDate
+                        navController.navigate("workers_selector/$projectId/$projectEndDate")
+                    }
+                )
+            }
+        }
+        
+        composable(
+            route = Route.WorkersSelector.routeWithArgument,
+            arguments = listOf(
+                navArgument(Route.WorkersSelector.argumentProjectId) {
+                    type = NavType.StringType
+                },
+                navArgument(Route.WorkersSelector.argumentProjectEndDate) {
+                    type = NavType.StringType
+                }
+            )
+        ) { navBackStackEntry ->
+            navBackStackEntry.arguments?.let { arguments ->
+                val projectId = arguments.getString(Route.WorkersSelector.argumentProjectId) ?: ""
+                val projectEndDate = arguments.getString(Route.WorkersSelector.argumentProjectEndDate) ?: ""
+                
+                val projectWorkersViewModel: pe.edu.upc.engitrack.features.workers.presentation.project.ProjectWorkersViewModel = hiltViewModel()
+                
+                WorkersSelectorScreen(
+                    projectId = projectId,
+                    projectEndDate = projectEndDate,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onWorkerSelected = { workerId, startDate, endDate ->
+                        // Assign worker through ViewModel
+                        projectWorkersViewModel.assignWorkerToProject(projectId, workerId, startDate, endDate)
                         navController.popBackStack()
                     }
                 )

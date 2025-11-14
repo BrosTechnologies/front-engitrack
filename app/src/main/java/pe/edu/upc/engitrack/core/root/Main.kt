@@ -32,7 +32,9 @@ fun Main(
     onNavigateToCreateProject: () -> Unit,
     onNavigateToProjectDetail: (String) -> Unit,
     onNavigateToAuth: () -> Unit = {},
-    onNavigateToEditProfile: () -> Unit = {}
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToWorkerForm: () -> Unit = {},
+    onNavigateToWorkerAssignments: () -> Unit = {}
 ) {
 
     val navigationItems = listOf(
@@ -88,7 +90,9 @@ fun Main(
                 2 -> CalendarScreen()
                 3 -> ProfileScreen(
                     onNavigateToAuth = onNavigateToAuth,
-                    onNavigateToEditProfile = onNavigateToEditProfile
+                    onNavigateToEditProfile = onNavigateToEditProfile,
+                    onNavigateToWorkerForm = onNavigateToWorkerForm,
+                    onNavigateToWorkerAssignments = onNavigateToWorkerAssignments
                 )
             }
         }
