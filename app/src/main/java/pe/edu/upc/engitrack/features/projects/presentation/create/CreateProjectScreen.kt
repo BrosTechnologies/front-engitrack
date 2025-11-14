@@ -49,14 +49,33 @@ fun CreateProjectScreen(
     var taskTitle by remember { mutableStateOf("") }
     var taskDueDate by remember { mutableStateOf("") }
     var isTaskDatePickerVisible by remember { mutableStateOf(false) }
+    var taskDateValidationError by remember { mutableStateOf<String?>(null) }
     
     val uiState by viewModel.uiState.collectAsState()
     
     // Mostrar DatePicker para fecha del proyecto
     val datePickerState = rememberDatePickerState()
     
-    // DatePicker para fecha de tarea
-    val taskDatePickerState = rememberDatePickerState()
+    // DatePicker para fecha de tarea - configurar fecha máxima basada en endDate del proyecto
+    val taskDatePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                if (endDate.isBlank()) return true
+                
+                return try {
+                    val selectedDate = Date(utcTimeMillis)
+                    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val projectEndDate = formatter.parse(endDate)
+                    
+                    projectEndDate?.let {
+                        selectedDate <= it
+                    } ?: true
+                } catch (e: Exception) {
+                    true
+                }
+            }
+        }
+    )
     
     // Observar cambios en el estado
     LaunchedEffect(uiState.isSuccess) {
@@ -433,6 +452,7 @@ fun CreateProjectScreen(
                 showAddTaskDialog = false
                 taskTitle = ""
                 taskDueDate = ""
+                taskDateValidationError = null
             },
             title = { Text("Nueva Tarea", fontWeight = FontWeight.Bold) },
             text = {
@@ -458,21 +478,48 @@ fun CreateProjectScreen(
                                 Icon(Icons.Default.CalendarToday, contentDescription = "Calendario")
                             }
                         },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        isError = taskDateValidationError != null
                     )
+                    
+                    // Mostrar mensaje de validación si existe
+                    taskDateValidationError?.let { error ->
+                        Text(
+                            text = error,
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    
+                    // Mostrar información sobre la fecha límite del proyecto
+                    if (endDate.isNotBlank()) {
+                        Text(
+                            text = "Fecha límite del proyecto: $endDate",
+                            color = Color.Gray,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         if (taskTitle.isNotBlank() && taskDueDate.isNotBlank()) {
-                            tasks = tasks + CreateTaskRequest(
-                                title = taskTitle,
-                                dueDate = taskDueDate
-                            )
-                            taskTitle = ""
-                            taskDueDate = ""
-                            showAddTaskDialog = false
+                            // Validar que la fecha de la tarea no sea posterior a la fecha límite del proyecto
+                            if (endDate.isNotBlank() && isTaskDateAfterProjectEndDate(taskDueDate, endDate)) {
+                                taskDateValidationError = "La fecha de la tarea no puede ser posterior a la fecha límite del proyecto (${endDate})"
+                            } else {
+                                tasks = tasks + CreateTaskRequest(
+                                    title = taskTitle,
+                                    dueDate = taskDueDate
+                                )
+                                taskTitle = ""
+                                taskDueDate = ""
+                                taskDateValidationError = null
+                                showAddTaskDialog = false
+                            }
                         }
                     },
                     enabled = taskTitle.isNotBlank() && taskDueDate.isNotBlank()
@@ -485,10 +532,28 @@ fun CreateProjectScreen(
                     showAddTaskDialog = false
                     taskTitle = ""
                     taskDueDate = ""
+                    taskDateValidationError = null
                 }) {
                     Text("Cancelar")
                 }
             }
         )
+    }
+}
+
+// Función helper para comparar fechas
+private fun isTaskDateAfterProjectEndDate(taskDate: String, projectEndDate: String): Boolean {
+    return try {
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val task = formatter.parse(taskDate)
+        val project = formatter.parse(projectEndDate)
+        
+        if (task != null && project != null) {
+            task.after(project)
+        } else {
+            false
+        }
+    } catch (e: Exception) {
+        false
     }
 }

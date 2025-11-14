@@ -135,6 +135,23 @@ fun AppNavigation() {
         }
 
         composable(
+            route = Route.ProjectDetail.routeWithArgument,
+            arguments = listOf(navArgument(Route.ProjectDetail.argument) {
+                type = NavType.StringType
+            })
+        ) { navBackStackEntry ->
+            navBackStackEntry.arguments?.let { arguments ->
+                val projectId = arguments.getString(Route.ProjectDetail.argument) ?: ""
+                ProjectDetailScreen(
+                    projectId = projectId,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        }
+
+        composable(
             route = Route.ProductDetail.routeWithArgument,
             arguments = listOf(navArgument(Route.ProductDetail.argument) {
                 type = NavType.IntType

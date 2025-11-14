@@ -1,6 +1,7 @@
 package pe.edu.upc.engitrack.features.dashboard.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,11 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import pe.edu.upc.engitrack.features.projects.domain.models.Project
 import pe.edu.upc.engitrack.features.projects.domain.models.Task
 import pe.edu.upc.engitrack.core.auth.AuthManager
@@ -29,9 +33,25 @@ import javax.inject.Inject
 fun DashboardScreen(
     authManager: AuthManager,
     viewModel: DashboardViewModel = hiltViewModel(),
-    onNavigateToProjects: () -> Unit
+    onNavigateToProjects: () -> Unit,
+    onNavigateToProjectDetail: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
+    // Recargar datos cuando la pantalla vuelve a estar visible
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadDashboardData()
+                viewModel.loadUserProfile()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
     
     LaunchedEffect(Unit) {
         viewModel.loadDashboardData()
@@ -101,7 +121,10 @@ fun DashboardScreen(
             modifier = Modifier.padding(bottom = 24.dp)
         ) {
             items(uiState.activeProjects) { project ->
-                ProjectCard(project = project)
+                ProjectCard(
+                    project = project,
+                    onClick = { onNavigateToProjectDetail(project.id) }
+                )
             }
         }
 
@@ -140,11 +163,15 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun ProjectCard(project: Project) {
+private fun ProjectCard(
+    project: Project,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .width(280.dp)
-            .height(160.dp),
+            .height(160.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = when (project.name.hashCode() % 2) {

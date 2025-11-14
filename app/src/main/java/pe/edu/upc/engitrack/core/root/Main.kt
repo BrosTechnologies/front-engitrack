@@ -78,7 +78,8 @@ fun Main(
             when (selectedIndex.intValue) {
                 0 -> DashboardScreen(
                     authManager = authManager,
-                    onNavigateToProjects = { selectedIndex.intValue = 1 }
+                    onNavigateToProjects = { selectedIndex.intValue = 1 },
+                    onNavigateToProjectDetail = onNavigateToProjectDetail
                 )
                 1 -> ProjectsScreen(
                     onProjectClick = onNavigateToProjectDetail,
