@@ -126,6 +126,35 @@ class WorkerProfileViewModel @Inject constructor(
         }
     }
 
+    fun deleteCurrentWorker() {
+        viewModelScope.launch {
+            val workerId = authManager.getWorkerId()
+            if (workerId == null) {
+                _uiState.value = _uiState.value.copy(error = "Worker ID no encontrado")
+                return@launch
+            }
+
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+            repository.deleteWorker(workerId)
+                .onSuccess {
+                    authManager.clearWorkerId()
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        worker = null,
+                        hasWorkerProfile = false,
+                        operationSuccess = true
+                    )
+                }
+                .onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = exception.message
+                    )
+                }
+        }
+    }
+
     fun resetOperationSuccess() {
         _uiState.value = _uiState.value.copy(operationSuccess = false)
     }

@@ -8,7 +8,6 @@ data class ProjectWorkerDto(
     val position: String,
     val hourlyRate: Double,
     val assignmentId: String,
-    val projectId: String,
     val startDate: String,
     val endDate: String
 )

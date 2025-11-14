@@ -3,6 +3,8 @@ package pe.edu.upc.engitrack.features.profile.presentation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -111,6 +113,7 @@ fun ProfileContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
+            .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
         // Información del usuario
@@ -239,7 +242,7 @@ fun ProfileContent(
             onNavigateToWorkerAssignments = onNavigateToWorkerAssignments
         )
         
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(24.dp))
         
         // Botón cerrar sesión
         Button(
@@ -492,6 +495,45 @@ fun WorkerProfileSection(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Asignaciones", fontSize = 14.sp)
                         }
+                    }
+                    
+                    // Delete button
+                    var showDeleteDialog by remember { mutableStateOf(false) }
+                    
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color(0xFFFF3B30)
+                        )
+                    ) {
+                        Text("Eliminar perfil de worker", fontSize = 14.sp)
+                    }
+                    
+                    if (showDeleteDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDeleteDialog = false },
+                            title = { Text("Eliminar perfil de worker") },
+                            text = { 
+                                Text("¿Estás seguro de que deseas eliminar tu perfil de worker? Esta acción no se puede deshacer.")
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        workerViewModel.deleteCurrentWorker()
+                                        showDeleteDialog = false
+                                    }
+                                ) {
+                                    Text("Eliminar", color = Color(0xFFFF3B30))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDeleteDialog = false }) {
+                                    Text("Cancelar")
+                                }
+                            }
+                        )
                     }
                 }
                 else -> {

@@ -1,5 +1,7 @@
 package pe.edu.upc.engitrack.features.workers.domain.models
 
+import java.time.LocalDate
+
 data class Worker(
     val id: String,
     val fullName: String,
@@ -26,9 +28,8 @@ data class ProjectWorker(
     val position: String,
     val hourlyRate: Double,
     val assignmentId: String,
-    val projectId: String,
-    val startDate: String,
-    val endDate: String
+    val startDate: LocalDate,
+    val endDate: LocalDate
 )
 
 data class WorkerAssignment(

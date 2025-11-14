@@ -4,6 +4,7 @@ import pe.edu.upc.engitrack.features.workers.data.remote.WorkersApiService
 import pe.edu.upc.engitrack.features.workers.data.remote.models.*
 import pe.edu.upc.engitrack.features.workers.domain.models.*
 import pe.edu.upc.engitrack.features.workers.domain.repositories.WorkersRepository
+import java.time.LocalDate
 import javax.inject.Inject
 
 class WorkersRepositoryImpl @Inject constructor(
@@ -194,9 +195,8 @@ class WorkersRepositoryImpl @Inject constructor(
         position = position,
         hourlyRate = hourlyRate,
         assignmentId = assignmentId,
-        projectId = projectId,
-        startDate = startDate,
-        endDate = endDate
+        startDate = LocalDate.parse(startDate),
+        endDate = LocalDate.parse(endDate)
     )
 
     private fun WorkerAssignmentDto.toDomain() = WorkerAssignment(

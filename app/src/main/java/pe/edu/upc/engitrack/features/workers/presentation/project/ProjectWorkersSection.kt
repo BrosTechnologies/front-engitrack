@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pe.edu.upc.engitrack.core.auth.AuthManager
 import pe.edu.upc.engitrack.features.workers.domain.models.ProjectWorker
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ProjectWorkersSection(
@@ -272,7 +273,7 @@ fun WorkerCard(
                         color = Color.Gray
                     )
                     Text(
-                        text = "${worker.startDate} - ${worker.endDate}",
+                        text = "${worker.startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))} - ${worker.endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
