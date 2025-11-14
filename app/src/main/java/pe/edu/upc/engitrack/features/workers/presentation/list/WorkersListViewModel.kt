@@ -7,13 +7,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pe.edu.upc.engitrack.core.auth.AuthManager
 import pe.edu.upc.engitrack.features.workers.domain.models.Worker
 import pe.edu.upc.engitrack.features.workers.domain.repositories.WorkersRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class WorkersListViewModel @Inject constructor(
-    private val repository: WorkersRepository
+    private val repository: WorkersRepository,
+    private val authManager: AuthManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WorkersListUiState())
@@ -23,15 +25,26 @@ class WorkersListViewModel @Inject constructor(
         loadWorkers()
     }
 
-    fun loadWorkers(page: Int? = null, pageSize: Int? = null) {
+    fun loadWorkers(page: Int? = null, pageSize: Int? = null, projectOwnerId: String? = null) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             repository.getWorkers(page, pageSize)
                 .onSuccess { workers ->
+                    val currentUserId = authManager.getUserId()
+                    val myWorkerId = authManager.getWorkerId()
+                    val isMyProject = projectOwnerId != null && projectOwnerId == currentUserId
+                    
+                    // Filter out owner's worker if this is their project
+                    val filteredList = if (isMyProject && myWorkerId != null) {
+                        workers.filter { it.id != myWorkerId }
+                    } else {
+                        workers
+                    }
+                    
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         workers = workers,
-                        filteredWorkers = workers
+                        filteredWorkers = filteredList
                     )
                 }
                 .onFailure { exception ->
@@ -43,7 +56,11 @@ class WorkersListViewModel @Inject constructor(
         }
     }
 
-    fun filterWorkers(query: String) {
+    fun filterWorkers(query: String, projectOwnerId: String? = null) {
+        val currentUserId = authManager.getUserId()
+        val myWorkerId = authManager.getWorkerId()
+        val isMyProject = projectOwnerId != null && projectOwnerId == currentUserId
+        
         val filtered = if (query.isBlank()) {
             _uiState.value.workers
         } else {
@@ -53,8 +70,16 @@ class WorkersListViewModel @Inject constructor(
                 it.position.contains(query, ignoreCase = true)
             }
         }
+        
+        // Apply owner exclusion filter
+        val finalFiltered = if (isMyProject && myWorkerId != null) {
+            filtered.filter { it.id != myWorkerId }
+        } else {
+            filtered
+        }
+        
         _uiState.value = _uiState.value.copy(
-            filteredWorkers = filtered,
+            filteredWorkers = finalFiltered,
             searchQuery = query
         )
     }

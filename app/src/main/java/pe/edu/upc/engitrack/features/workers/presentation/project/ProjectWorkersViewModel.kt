@@ -7,13 +7,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pe.edu.upc.engitrack.core.auth.AuthManager
 import pe.edu.upc.engitrack.features.workers.domain.models.ProjectWorker
 import pe.edu.upc.engitrack.features.workers.domain.repositories.WorkersRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class ProjectWorkersViewModel @Inject constructor(
-    private val repository: WorkersRepository
+    private val repository: WorkersRepository,
+    private val authManager: AuthManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProjectWorkersUiState())
@@ -42,9 +44,23 @@ class ProjectWorkersViewModel @Inject constructor(
         projectId: String,
         workerId: String,
         startDate: String,
-        endDate: String
+        endDate: String,
+        projectOwnerId: String? = null
     ) {
         viewModelScope.launch {
+            // Validate that owner cannot assign themselves
+            val currentUserId = authManager.getUserId()
+            val myWorkerId = authManager.getWorkerId()
+            val isMyProject = projectOwnerId != null && projectOwnerId == currentUserId
+            
+            if (isMyProject && myWorkerId != null && workerId == myWorkerId) {
+                _uiState.value = _uiState.value.copy(
+                    isAssigning = false,
+                    error = "No puedes asignarte como colaborador en tu propio proyecto."
+                )
+                return@launch
+            }
+            
             _uiState.value = _uiState.value.copy(isAssigning = true, error = null)
             repository.assignWorkerToProject(projectId, workerId, startDate, endDate)
                 .onSuccess { projectWorker ->

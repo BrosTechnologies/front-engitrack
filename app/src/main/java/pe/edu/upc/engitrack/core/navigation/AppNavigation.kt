@@ -175,9 +175,9 @@ fun AppNavigation() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onNavigateToWorkersSelector = { projectStartDate, projectEndDate ->
-                        // Navigate with projectId, projectStartDate and projectEndDate
-                        navController.navigate("workers_selector/$projectId/$projectStartDate/$projectEndDate")
+                    onNavigateToWorkersSelector = { projectStartDate, projectEndDate, projectOwnerId ->
+                        // Navigate with projectId, projectStartDate, projectEndDate and projectOwnerId
+                        navController.navigate("workers_selector/$projectId/$projectStartDate/$projectEndDate/$projectOwnerId")
                     }
                 )
             }
@@ -194,6 +194,9 @@ fun AppNavigation() {
                 },
                 navArgument(Route.WorkersSelector.argumentProjectEndDate) {
                     type = NavType.StringType
+                },
+                navArgument(Route.WorkersSelector.argumentProjectOwnerId) {
+                    type = NavType.StringType
                 }
             )
         ) { navBackStackEntry ->
@@ -201,6 +204,7 @@ fun AppNavigation() {
                 val projectId = arguments.getString(Route.WorkersSelector.argumentProjectId) ?: ""
                 val projectStartDate = arguments.getString(Route.WorkersSelector.argumentProjectStartDate) ?: ""
                 val projectEndDate = arguments.getString(Route.WorkersSelector.argumentProjectEndDate) ?: ""
+                val projectOwnerId = arguments.getString(Route.WorkersSelector.argumentProjectOwnerId) ?: ""
                 
                 val projectWorkersViewModel: pe.edu.upc.engitrack.features.workers.presentation.project.ProjectWorkersViewModel = hiltViewModel()
                 
@@ -208,12 +212,13 @@ fun AppNavigation() {
                     projectId = projectId,
                     projectStartDate = projectStartDate,
                     projectEndDate = projectEndDate,
+                    projectOwnerId = projectOwnerId,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
                     onWorkerSelected = { workerId, startDate, endDate ->
-                        // Assign worker through ViewModel
-                        projectWorkersViewModel.assignWorkerToProject(projectId, workerId, startDate, endDate)
+                        // Assign worker through ViewModel with projectOwnerId for validation
+                        projectWorkersViewModel.assignWorkerToProject(projectId, workerId, startDate, endDate, projectOwnerId)
                         navController.popBackStack()
                     }
                 )
