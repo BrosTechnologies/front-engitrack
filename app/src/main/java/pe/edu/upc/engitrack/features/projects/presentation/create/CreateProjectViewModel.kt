@@ -28,7 +28,7 @@ class CreateProjectViewModel @Inject constructor(
     
     fun createProject(
         name: String,
-        description: String,
+        description: String?,
         startDate: String,
         endDate: String,
         budget: Double = 0.0,
@@ -42,6 +42,7 @@ class CreateProjectViewModel @Inject constructor(
             try {
                 val request = CreateProjectRequest(
                     name = name,
+                    description = description,
                     startDate = startDate,
                     endDate = endDate,
                     budget = budget,

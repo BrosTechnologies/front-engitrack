@@ -56,10 +56,12 @@ fun ProjectDetailScreen(
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     var showCompleteProjectDialog by remember { mutableStateOf(false) }
     var showEditProjectDialog by remember { mutableStateOf(false) }
+    var showDeleteProjectDialog by remember { mutableStateOf(false) }
     var showDropdownMenu by remember { mutableStateOf(false) }
     
     // Estados para edición de proyecto
     var editProjectName by remember { mutableStateOf("") }
+    var editProjectDescription by remember { mutableStateOf("") }
     var editProjectEndDate by remember { mutableStateOf("") }
     var editProjectBudget by remember { mutableStateOf("") }
     var editProjectPriority by remember { mutableStateOf(Priority.MEDIUM) }
@@ -91,6 +93,13 @@ fun ProjectDetailScreen(
     LaunchedEffect(uiState.operationSuccess) {
         if (uiState.operationSuccess) {
             viewModel.resetOperationSuccess()
+        }
+    }
+    
+    // Navegar hacia atrás cuando se elimina el proyecto
+    LaunchedEffect(uiState.projectDeleted) {
+        if (uiState.projectDeleted) {
+            onNavigateBack()
         }
     }
     
@@ -175,6 +184,7 @@ fun ProjectDetailScreen(
                                         // Pre-llenar datos del proyecto
                                         uiState.project?.let { project ->
                                             editProjectName = project.name
+                                            editProjectDescription = project.description ?: ""
                                             editProjectEndDate = project.endDate
                                             editProjectBudget = project.budget.toString()
                                             editProjectPriority = Priority.fromString(project.priority)
@@ -194,6 +204,20 @@ fun ProjectDetailScreen(
                                     },
                                     leadingIcon = {
                                         Icon(Icons.Default.CheckCircle, contentDescription = null)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Eliminar proyecto", color = Color.Red) },
+                                    onClick = {
+                                        showDeleteProjectDialog = true
+                                        showDropdownMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Delete, 
+                                            contentDescription = null,
+                                            tint = Color.Red
+                                        )
                                     }
                                 )
                             }
@@ -294,9 +318,10 @@ fun ProjectDetailScreen(
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             Text(
-                                text = "Proyecto creado el ${project.startDate}",
+                                text = project.description?.takeIf { it.isNotBlank() } ?: "Sin descripción",
                                 fontSize = 16.sp,
-                                color = Color.Black
+                                color = if (project.description.isNullOrBlank()) Color.Gray else Color.Black,
+                                fontStyle = if (project.description.isNullOrBlank()) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal
                             )
                             
                             Spacer(modifier = Modifier.height(16.dp))
@@ -639,6 +664,43 @@ fun ProjectDetailScreen(
         )
     }
     
+    // Dialog para eliminar proyecto
+    if (showDeleteProjectDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteProjectDialog = false },
+            title = { Text("Eliminar proyecto", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("¿Seguro que deseas eliminar este proyecto? Se eliminarán también todas sus tareas.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteProject(projectId)
+                        showDeleteProjectDialog = false
+                    },
+                    enabled = !uiState.isDeletingProject,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Red
+                    )
+                ) {
+                    if (uiState.isDeletingProject) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.Red
+                        )
+                    } else {
+                        Text("Eliminar")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteProjectDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
     // Dialog para editar proyecto
     if (showEditProjectDialog) {
         AlertDialog(
@@ -663,6 +725,32 @@ fun ProjectDetailScreen(
                             .padding(bottom = 16.dp),
                         shape = RoundedCornerShape(8.dp)
                     )
+                    
+                    // Descripción
+                    OutlinedTextField(
+                        value = editProjectDescription,
+                        onValueChange = { 
+                            if (it.length <= 500) {
+                                editProjectDescription = it
+                            }
+                        },
+                        label = { Text("Descripción (opcional)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .padding(bottom = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        maxLines = 4,
+                        supportingText = {
+                            Text(
+                                text = "${editProjectDescription.length}/500",
+                                fontSize = 12.sp,
+                                color = if (editProjectDescription.length > 450) Color.Red else Color.Gray
+                            )
+                        }
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     // Fecha límite
                     OutlinedTextField(
@@ -736,6 +824,7 @@ fun ProjectDetailScreen(
                             viewModel.updateProject(
                                 projectId = projectId,
                                 name = editProjectName,
+                                description = if (editProjectDescription.isBlank()) null else editProjectDescription,
                                 endDate = editProjectEndDate,
                                 budget = budget,
                                 priority = editProjectPriority

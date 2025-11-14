@@ -201,12 +201,16 @@ fun CreateProjectScreen(
                 
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = { 
+                        if (it.length <= 500) {
+                            description = it
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp)
-                        .padding(bottom = 24.dp),
-                    placeholder = { Text("Descripción del proyecto") },
+                        .padding(bottom = 8.dp),
+                    placeholder = { Text("Descripción del proyecto (opcional)") },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
@@ -214,8 +218,17 @@ fun CreateProjectScreen(
                         focusedContainerColor = Color(0xFFF0F0F0),
                         unfocusedContainerColor = Color(0xFFF0F0F0)
                     ),
-                    maxLines = 4
+                    maxLines = 4,
+                    supportingText = {
+                        Text(
+                            text = "${description.length}/500",
+                            fontSize = 12.sp,
+                            color = if (description.length > 450) Color.Red else Color.Gray
+                        )
+                    }
                 )
+                
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 // Presupuesto
                 Text(
@@ -436,7 +449,7 @@ fun CreateProjectScreen(
                 // Botón Guardar
                 Button(
                     onClick = {
-                        if (projectName.isNotBlank() && description.isNotBlank() && endDate.isNotBlank()) {
+                        if (projectName.isNotBlank() && endDate.isNotBlank()) {
                             // Validar presupuesto
                             val budget = budgetText.toDoubleOrNull()
                             if (budget == null && budgetText.isNotBlank()) {
@@ -449,7 +462,7 @@ fun CreateProjectScreen(
                             
                             viewModel.createProject(
                                 name = projectName,
-                                description = description,
+                                description = if (description.isBlank()) null else description,
                                 startDate = currentDate,
                                 endDate = endDate,
                                 budget = budget ?: 0.0,
@@ -466,7 +479,7 @@ fun CreateProjectScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF007AFF)
                     ),
-                    enabled = !uiState.isLoading && projectName.isNotBlank() && description.isNotBlank() && endDate.isNotBlank()
+                    enabled = !uiState.isLoading && projectName.isNotBlank() && endDate.isNotBlank()
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(

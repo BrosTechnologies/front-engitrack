@@ -10,5 +10,6 @@ interface ProjectRepository {
     suspend fun createTask(projectId: String, task: CreateTaskRequest): Result<Task>
     suspend fun updateTaskStatus(projectId: String, taskId: String, status: String): Result<Task>
     suspend fun deleteTask(projectId: String, taskId: String): Result<Unit>
+    suspend fun deleteProject(id: String): Result<Unit>
     suspend fun completeProject(id: String): Result<Project>
 }

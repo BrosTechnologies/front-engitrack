@@ -124,6 +124,19 @@ class ProjectRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteProject(id: String): Result<Unit> {
+        return try {
+            val response = projectApiService.deleteProject(id)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al eliminar proyecto: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun completeProject(id: String): Result<Project> {
         return try {
             val response = projectApiService.completeProject(id)

@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 data class Project(
     val id: String,
     val name: String,
+    val description: String? = null,
     val startDate: String,
     val endDate: String,
     val budget: Double,
@@ -24,6 +25,7 @@ data class Task(
 
 data class CreateProjectRequest(
     val name: String,
+    val description: String? = null,
     val startDate: String,
     val endDate: String,
     val budget: Double,
@@ -39,6 +41,7 @@ data class CreateTaskRequest(
 
 data class UpdateProjectRequest(
     val name: String,
+    val description: String? = null,
     val budget: Double,
     val endDate: String,
     val priority: Int // 0=LOW, 1=MEDIUM, 2=HIGH
