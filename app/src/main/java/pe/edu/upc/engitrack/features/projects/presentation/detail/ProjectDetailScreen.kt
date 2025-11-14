@@ -22,17 +22,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import pe.edu.upc.engitrack.core.auth.AuthManager
 import pe.edu.upc.engitrack.features.projects.domain.models.Priority
 import pe.edu.upc.engitrack.features.projects.domain.models.Task
 import pe.edu.upc.engitrack.features.projects.domain.models.TaskStatus
 import pe.edu.upc.engitrack.features.projects.presentation.components.PriorityBadge
 import pe.edu.upc.engitrack.features.projects.presentation.components.PrioritySelector
+import pe.edu.upc.engitrack.features.workers.presentation.project.ProjectWorkersSection
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,9 +44,22 @@ import java.util.*
 fun ProjectDetailScreen(
     projectId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToWorkersSelector: (String) -> Unit = {},
     viewModel: ProjectDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    val context = LocalContext.current
+    val authManager = remember {
+        val entryPoint = dagger.hilt.android.EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            pe.edu.upc.engitrack.core.navigation.AuthManagerEntryPoint::class.java
+        )
+        entryPoint.authManager()
+    }
+    
+    val currentUserId = authManager.getUserId()
+    val currentUserRole = authManager.getUserRole()
     
     var showAddTaskDialog by remember { mutableStateOf(false) }
     var newTaskTitle by remember { mutableStateOf("") }
@@ -374,6 +390,19 @@ fun ProjectDetailScreen(
                             }
                         }
                     }
+                    
+                    // Workers Section
+                    ProjectWorkersSection(
+                        projectId = projectId,
+                        projectEndDate = project.endDate,
+                        projectOwnerId = project.ownerUserId,
+                        currentUserId = currentUserId,
+                        currentUserRole = currentUserRole,
+                        isProjectCompleted = project.status == "COMPLETED",
+                        onNavigateToWorkersSelector = { onNavigateToWorkersSelector(project.endDate) }
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     // Título de tareas con contador
                     val completedCount = project.tasks.count { it.status == "DONE" }

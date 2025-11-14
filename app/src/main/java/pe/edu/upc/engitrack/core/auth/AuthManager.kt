@@ -19,6 +19,7 @@ class AuthManager @Inject constructor(
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_ROLE = "user_role"
         private const val KEY_USER_FULL_NAME = "user_full_name"
+        private const val KEY_WORKER_ID = "worker_id"
     }
     
     fun saveToken(token: String) {
@@ -62,6 +63,16 @@ class AuthManager @Inject constructor(
     }
     
     fun isLoggedIn(): Boolean = getToken() != null
+    
+    fun saveWorkerId(workerId: String) {
+        prefs.edit().putString(KEY_WORKER_ID, workerId).apply()
+    }
+    
+    fun getWorkerId(): String? = prefs.getString(KEY_WORKER_ID, null)
+    
+    fun clearWorkerId() {
+        prefs.edit().remove(KEY_WORKER_ID).apply()
+    }
     
     fun logout() {
         prefs.edit().clear().apply()
