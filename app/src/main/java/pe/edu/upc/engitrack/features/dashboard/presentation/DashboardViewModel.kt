@@ -36,16 +36,28 @@ class DashboardViewModel @Inject constructor(
                     android.util.Log.d("DashboardViewModel", "Projects loaded successfully: ${projects.size} projects")
                     projects.forEach { project ->
                         android.util.Log.d("DashboardViewModel", "Project: ${project.name}, Tasks: ${project.tasks.size}")
-                    }
-                    
-                    val today = getCurrentDateString()
-                    val todayTasks = projects.flatMap { project ->
-                        project.tasks.filter { task ->
-                            task.dueDate == today
+                        project.tasks.forEach { task ->
+                            android.util.Log.d("DashboardViewModel", "  Task: ${task.title}, DueDate: ${task.dueDate}, Status: ${task.status}")
                         }
                     }
                     
-                    android.util.Log.d("DashboardViewModel", "Today's tasks: ${todayTasks.size}")
+                    val today = getCurrentDateString()
+                    android.util.Log.d("DashboardViewModel", "Today's date: $today")
+                    
+                    // Filtrar tareas del día: incluye tareas de hoy y próximos 7 días que no estén completadas
+                    val todayTasks = projects.flatMap { project ->
+                        project.tasks.filter { task ->
+                            val taskDate = task.dueDate
+                            val isNotCompleted = task.status != "DONE"
+                            val isRelevant = isTaskRelevantForToday(taskDate, today)
+                            
+                            android.util.Log.d("DashboardViewModel", "Task '${task.title}': date=$taskDate, notCompleted=$isNotCompleted, relevant=$isRelevant")
+                            
+                            isNotCompleted && isRelevant
+                        }
+                    }
+                    
+                    android.util.Log.d("DashboardViewModel", "Today's tasks filtered: ${todayTasks.size}")
                     
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -117,6 +129,32 @@ class DashboardViewModel @Inject constructor(
         val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
         
         return String.format("%04d-%02d-%02d", year, month, day)
+    }
+    
+    /**
+     * Determina si una tarea es relevante para mostrar en "Tareas del día"
+     * Criterio: Tareas con fecha de hoy o hasta 7 días adelante
+     */
+    private fun isTaskRelevantForToday(taskDateString: String, todayString: String): Boolean {
+        return try {
+            val taskDate = parseDate(taskDateString)
+            val today = parseDate(todayString)
+            
+            // Calcular diferencia en días
+            val diffInMillis = taskDate.time - today.time
+            val diffInDays = diffInMillis / (1000 * 60 * 60 * 24)
+            
+            // Mostrar tareas de hoy hasta 7 días adelante (o tareas vencidas)
+            diffInDays <= 7
+        } catch (e: Exception) {
+            android.util.Log.e("DashboardViewModel", "Error parsing dates: $taskDateString, $todayString", e)
+            false
+        }
+    }
+    
+    private fun parseDate(dateString: String): java.util.Date {
+        val format = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        return format.parse(dateString) ?: java.util.Date()
     }
 }
 
