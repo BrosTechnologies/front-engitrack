@@ -55,18 +55,18 @@ data class UpdateTaskStatusRequest(
     val status: String
 )
 
-// Priority enum
+// Priority enum con colores mejorados
 enum class Priority(val value: Int, val displayName: String, val color: Color) {
-    LOW(0, "Baja", Color(0xFF4CAF50)),
-    MEDIUM(1, "Media", Color(0xFFFF9800)), 
-    HIGH(2, "Alta", Color(0xFFE53E3E));
+    LOW(0, "Baja", Color(0xFF4CAF50)),      // Verde
+    MEDIUM(1, "Media", Color(0xFFFF9800)),   // Naranja  
+    HIGH(2, "Alta", Color(0xFFE53E3E));      // Rojo
     
     companion object {
         fun fromInt(value: Int) = values().find { it.value == value } ?: MEDIUM
         fun fromString(value: String) = when(value.uppercase()) {
-            "LOW" -> LOW
-            "MEDIUM" -> MEDIUM  
-            "HIGH" -> HIGH
+            "LOW", "BAJA" -> LOW
+            "MEDIUM", "MEDIA" -> MEDIUM  
+            "HIGH", "ALTA" -> HIGH
             else -> MEDIUM
         }
     }

@@ -1,7 +1,10 @@
 package pe.edu.upc.engitrack.features.projects.presentation.create
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import pe.edu.upc.engitrack.core.auth.AuthManager
+import pe.edu.upc.engitrack.features.projects.domain.models.CreateTaskRequest
 import pe.edu.upc.engitrack.features.projects.domain.models.Priority
 import pe.edu.upc.engitrack.features.projects.presentation.components.PrioritySelector
 import java.text.SimpleDateFormat
@@ -37,10 +43,20 @@ fun CreateProjectScreen(
     var selectedPriority by remember { mutableStateOf(Priority.MEDIUM) }
     var isDatePickerVisible by remember { mutableStateOf(false) }
     
+    // Estado para tareas
+    var tasks by remember { mutableStateOf(listOf<CreateTaskRequest>()) }
+    var showAddTaskDialog by remember { mutableStateOf(false) }
+    var taskTitle by remember { mutableStateOf("") }
+    var taskDueDate by remember { mutableStateOf("") }
+    var isTaskDatePickerVisible by remember { mutableStateOf(false) }
+    
     val uiState by viewModel.uiState.collectAsState()
     
-    // Mostrar DatePicker
+    // Mostrar DatePicker para fecha del proyecto
     val datePickerState = rememberDatePickerState()
+    
+    // DatePicker para fecha de tarea
+    val taskDatePickerState = rememberDatePickerState()
     
     // Observar cambios en el estado
     LaunchedEffect(uiState.isSuccess) {
@@ -50,7 +66,7 @@ fun CreateProjectScreen(
         }
     }
     
-    // DatePicker Dialog
+    // DatePicker Dialog para fecha del proyecto
     if (isDatePickerVisible) {
         DatePickerDialog(
             onDismissRequest = { isDatePickerVisible = false },
@@ -74,6 +90,33 @@ fun CreateProjectScreen(
             }
         ) {
             DatePicker(state = datePickerState)
+        }
+    }
+    
+    // DatePicker Dialog para fecha de tarea
+    if (isTaskDatePickerVisible) {
+        DatePickerDialog(
+            onDismissRequest = { isTaskDatePickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        taskDatePickerState.selectedDateMillis?.let { millis ->
+                            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            taskDueDate = formatter.format(Date(millis))
+                        }
+                        isTaskDatePickerVisible = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isTaskDatePickerVisible = false }) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = taskDatePickerState)
         }
     }
 
@@ -208,7 +251,7 @@ fun CreateProjectScreen(
                     onValueChange = { },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 40.dp),
+                        .padding(bottom = 24.dp),
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { /* TODO: Agregar miembros */ }) {
@@ -223,6 +266,107 @@ fun CreateProjectScreen(
                         unfocusedContainerColor = Color(0xFFF0F0F0)
                     )
                 )
+                
+                // Sección de Tareas
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Tareas",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    
+                    IconButton(
+                        onClick = { showAddTaskDialog = true }
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Agregar tarea",
+                            tint = Color(0xFF007AFF)
+                        )
+                    }
+                }
+                
+                // Lista de tareas
+                if (tasks.isEmpty()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No hay tareas agregadas",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp)
+                    ) {
+                        tasks.forEachIndexed { index, task ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = task.title,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color.Black
+                                        )
+                                        Text(
+                                            text = "Vencimiento: ${task.dueDate}",
+                                            fontSize = 14.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.padding(top = 4.dp)
+                                        )
+                                    }
+                                    
+                                    IconButton(
+                                        onClick = {
+                                            tasks = tasks.filterIndexed { i, _ -> i != index }
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Eliminar tarea",
+                                            tint = Color.Red
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 
                 Spacer(modifier = Modifier.height(40.dp))
                 
@@ -241,7 +385,7 @@ fun CreateProjectScreen(
                                 budget = 0.0,
                                 priority = selectedPriority.value,
                                 ownerUserId = userId,
-                                tasks = emptyList()
+                                tasks = tasks
                             )
                         }
                     },
@@ -280,5 +424,71 @@ fun CreateProjectScreen(
                 }
             }
         }
+    }
+    
+    // Dialog para agregar nueva tarea
+    if (showAddTaskDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showAddTaskDialog = false
+                taskTitle = ""
+                taskDueDate = ""
+            },
+            title = { Text("Nueva Tarea", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = taskTitle,
+                        onValueChange = { taskTitle = it },
+                        placeholder = { Text("Título de la tarea") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    OutlinedTextField(
+                        value = taskDueDate,
+                        onValueChange = { },
+                        placeholder = { Text("Fecha de vencimiento") },
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            IconButton(onClick = { isTaskDatePickerVisible = true }) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = "Calendario")
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (taskTitle.isNotBlank() && taskDueDate.isNotBlank()) {
+                            tasks = tasks + CreateTaskRequest(
+                                title = taskTitle,
+                                dueDate = taskDueDate
+                            )
+                            taskTitle = ""
+                            taskDueDate = ""
+                            showAddTaskDialog = false
+                        }
+                    },
+                    enabled = taskTitle.isNotBlank() && taskDueDate.isNotBlank()
+                ) {
+                    Text("Agregar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAddTaskDialog = false
+                    taskTitle = ""
+                    taskDueDate = ""
+                }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
