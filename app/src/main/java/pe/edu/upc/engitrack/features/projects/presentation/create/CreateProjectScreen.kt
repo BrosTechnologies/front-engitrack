@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,6 +44,8 @@ fun CreateProjectScreen(
     var endDate by remember { mutableStateOf("") }
     var selectedPriority by remember { mutableStateOf(Priority.MEDIUM) }
     var isDatePickerVisible by remember { mutableStateOf(false) }
+    var budgetText by remember { mutableStateOf("") }
+    var budgetError by remember { mutableStateOf<String?>(null) }
     
     // Estado para tareas
     var tasks by remember { mutableStateOf(listOf<CreateTaskRequest>()) }
@@ -212,6 +216,46 @@ fun CreateProjectScreen(
                     ),
                     maxLines = 4
                 )
+                
+                // Presupuesto
+                Text(
+                    text = "Presupuesto (S/)",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                OutlinedTextField(
+                    value = budgetText,
+                    onValueChange = {
+                        budgetText = it
+                        budgetError = null
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    placeholder = { Text("Ej: 5000.00") },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color(0xFFF0F0F0),
+                        unfocusedContainerColor = Color(0xFFF0F0F0)
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = budgetError != null
+                )
+                
+                budgetError?.let { error ->
+                    Text(
+                        text = error,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 // Fecha Límite
                 Text(
@@ -393,6 +437,13 @@ fun CreateProjectScreen(
                 Button(
                     onClick = {
                         if (projectName.isNotBlank() && description.isNotBlank() && endDate.isNotBlank()) {
+                            // Validar presupuesto
+                            val budget = budgetText.toDoubleOrNull()
+                            if (budget == null && budgetText.isNotBlank()) {
+                                budgetError = "El presupuesto debe ser un número válido"
+                                return@Button
+                            }
+                            
                             val userId = authManager.getUserId() ?: ""
                             val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                             
@@ -401,7 +452,7 @@ fun CreateProjectScreen(
                                 description = description,
                                 startDate = currentDate,
                                 endDate = endDate,
-                                budget = 0.0,
+                                budget = budget ?: 0.0,
                                 priority = selectedPriority.value,
                                 ownerUserId = userId,
                                 tasks = tasks

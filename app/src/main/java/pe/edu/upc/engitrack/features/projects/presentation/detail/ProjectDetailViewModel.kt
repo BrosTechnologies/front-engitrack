@@ -8,8 +8,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pe.edu.upc.engitrack.features.projects.domain.models.CreateTaskRequest
+import pe.edu.upc.engitrack.features.projects.domain.models.Priority
 import pe.edu.upc.engitrack.features.projects.domain.models.Project
+import pe.edu.upc.engitrack.features.projects.domain.models.UpdateProjectRequest
 import pe.edu.upc.engitrack.features.projects.domain.repositories.ProjectRepository
+import retrofit2.HttpException
 import javax.inject.Inject
 
 data class ProjectDetailUiState(
@@ -20,6 +23,7 @@ data class ProjectDetailUiState(
     val isDeletingTask: Boolean = false,
     val isUpdatingStatus: Boolean = false,
     val isCompletingProject: Boolean = false,
+    val isUpdatingProject: Boolean = false,
     val operationSuccess: Boolean = false
 )
 
@@ -124,6 +128,36 @@ class ProjectDetailViewModel @Inject constructor(
         }
     }
     
+    fun updateProject(projectId: String, name: String, endDate: String, budget: Double, priority: Priority) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isUpdatingProject = true, error = null)
+            
+            val updateRequest = UpdateProjectRequest(
+                name = name,
+                budget = budget,
+                endDate = endDate,
+                priority = priority.value
+            )
+            
+            projectRepository.updateProject(projectId, updateRequest).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isUpdatingProject = false,
+                        operationSuccess = true
+                    )
+                    // Recargar el proyecto para obtener los datos actualizados
+                    loadProject(projectId)
+                },
+                onFailure = { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isUpdatingProject = false,
+                        error = "Error al actualizar proyecto: ${exception.message}"
+                    )
+                }
+            )
+        }
+    }
+    
     fun completeProject(projectId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCompletingProject = true, error = null)
@@ -138,9 +172,20 @@ class ProjectDetailViewModel @Inject constructor(
                     loadProject(projectId)
                 },
                 onFailure = { exception ->
+                    // Determinar el mensaje de error apropiado
+                    val errorMessage = when {
+                        exception is HttpException && (exception.code() == 400 || exception.code() == 409) -> 
+                            "Todas las tareas deben estar completas para poder culminar el proyecto."
+                        exception.message?.contains("tareas", ignoreCase = true) == true ||
+                        exception.message?.contains("task", ignoreCase = true) == true ||
+                        exception.message?.contains("pendiente", ignoreCase = true) == true -> 
+                            "Todas las tareas deben estar completas para poder culminar el proyecto."
+                        else -> "Error al completar proyecto: ${exception.message}"
+                    }
+                    
                     _uiState.value = _uiState.value.copy(
                         isCompletingProject = false,
-                        error = "Error al completar proyecto: ${exception.message}"
+                        error = errorMessage
                     )
                 }
             )
